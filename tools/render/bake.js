@@ -23,6 +23,8 @@ for(const b of ['tree_oak','tree_pine','tree_pine_tall','tree_palm','tree_autumn
 for(const b of ['cargo_ship','miner_ship'])add('nf.'+b,NF+b+'.glb',0.25,{yaw:90});
 for(const b of ['sedan','taxi','police_car','van','truck','truck_flat','delivery_van','delivery_flat','ambulance','firetruck','garbage_truck','tractor','digger'])add('nf.'+b,NF+b+'.glb',0.11,{yaw:90});
 for(const b of ['barrel','barrels','crate','chest'])add('nf.'+b,NF+b+'.glb',0.2,{});
+for(const b of ['flower_red','mushroom_red','pumpkin','carrot','log'])add('nf.forage.'+b,NF+b+'.glb',0.3,{yaw:40});
+add('nf.bush.s',NF+'bush.glb',0.3,{yaw:70}); add('nf.bush_large.s',NF+'bush_large.glb',0.3,{yaw:200}); add('nf.rock_small.s',NF+'rock_small.glb',0.3,{yaw:120});
 // characters: walk cycle, work and carry poses, facing screen-right (mirrored in game for left)
 for(const c of ['mini_male_a','mini_male_b','mini_male_c','mini_male_d','mini_male_e','mini_male_f','mini_female_a','mini_female_b','mini_female_c','mini_female_d','mini_female_e','mini_female_f']){ for(let f=0;f<4;f++)add(`ch.${c}.walk${f}`,NF+c+'.glb',0.25,{anim:'walk',t:f/4,yaw:90}); add(`ch.${c}.idle`,NF+c+'.glb',0.25,{anim:'idle',t:0.2,yaw:90}); add(`ch.${c}.work0`,NF+c+'.glb',0.25,{anim:'pick-up',t:0.3,yaw:90}); add(`ch.${c}.work1`,NF+c+'.glb',0.25,{anim:'pick-up',t:0.55,yaw:90}); add(`ch.${c}.hold`,NF+c+'.glb',0.25,{anim:'holding-right',t:0.2,yaw:90}); }
 for(const a of ['deer','stag','fox','wolf']){ for(let f=0;f<2;f++)add(`an.${a}.walk${f}`,NF+a+'.glb',0.06,{anim:'Walk',t:f/2+0.1,yaw:90}); add(`an.${a}.idle`,NF+a+'.glb',0.06,{anim:'Eating',t:0.4,yaw:90}); }
