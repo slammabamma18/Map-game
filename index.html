@@ -2578,7 +2578,7 @@ function fieldSprite(ec,crop,horiz,v,season,q){ return spr(`fld.${ec}.${crop}.${
     if(ec===7){ g.fillStyle='rgba(60,45,25,.35)'; g.fillRect(x,y,iw,iw); g.fillStyle=cs[1]; g.beginPath(); g.arc(0.5,0.5,iw*0.46,0,6.283); g.fill(); if(det){ g.strokeStyle='rgba(0,0,0,.08)'; g.lineWidth=lw; for(let r=0.08;r<iw*0.46;r+=0.05){ g.beginPath(); g.arc(0.5,0.5,r,0,6.283); g.stroke(); } } return; }
     band(x,y,iw,iw,cs[v%3]); if(det){ g.strokeStyle='rgba(255,255,255,.12)'; g.lineWidth=lw; g.beginPath(); for(let i=1;i<12;i++){ if(horiz){ g.moveTo(x,y+iw*i/12); g.lineTo(x+iw,y+iw*i/12); } else { g.moveTo(x+iw*i/12,y); g.lineTo(x+iw*i/12,y+iw); } } g.stroke(); } }); }
 function drawField(c,era,px,py,z,j,now,b,river,prog){ const h=hash(j*5+2), h2=hash(j*11+7), h3=hash(j*17+5);
-  if(prog!==undefined&&prog<1){ drawField(c,era,px,py,z,j,now,b,river); c.fillStyle='rgba(110,80,45,.9)'; c.fillRect(px+z*0.04+z*0.92*prog,py+z*0.04,z*0.92*(1-prog),z*0.92); return; }
+  if(prog!==undefined&&prog<1){ drawField(c,era,px,py,z,j,now,b,river); if(era>=1){ c.fillStyle='rgba(110,80,45,.4)'; c.fillRect(px+z*0.08+z*0.84*prog,py+z*0.08,z*0.84*(1-prog),z*0.84); } return; }
   const crop=cropSet(b,river,h); const ec=era===0?0:era===1?1:era<=3?2:era===4?3:era<=6?4:era===7?5:((b===8||b===7)&&h<0.5)?7:6; const y=(j/W)|0; const season=seasonOf(y); const q=qz(z);
   blit(c,fieldSprite(ec,crop,h2<0.5,Math.floor(h3*3),season,q),px,py,z); }
 const FORAGE=['nf.bush.s','nf.bush_large.s','nf.forage.flower_red','nf.forage.mushroom_red','nf.rock_small.s','nf.bush.s','nf.forage.pumpkin','nf.forage.log','nf.bush_large.s','nf.forage.carrot'];
