@@ -18,6 +18,10 @@ The simulation is untouched; the whole renderer (the second half of the script) 
 - **Each age marks the land.** Stone-age and early villages sit in clearings of stumps behind a palisade, industrial towns raise smokestacks, modern ones pave a square, plant a park and light their streets; market stalls fill medieval squares, fishermen stand on the piers and flocks wheel over the woods.
 - **Adaptive quality.** Frame time is tracked and slow devices drop the water shimmer first, then crowd sizes.
 
+## Peopling the world
+
+One band of settlers is enough to fill the planet. Stone Age camps split often; bands that find the land around them taken strike out far, ranging up to a hundred cells over land and across straits and shallow seas, preferring empty country and new regions. A band that arrives on poor ground keeps walking, and a camp that cannot feed itself moves on as nomads. Each far settlement takes the culture of the land it finds, so new peoples appear as the migrations spread. Early eras last longer, so continents fill with hunter-gatherers and farmers long before the first empires: from a seed in East Africa, bands reach Europe and Asia in the Bronze Age; from China, the Americas are settled over the Bering land bridge by the Classical era.
+
 ## Rebuilding the sprite sheet
 
 The render tooling lives in the session scratch directory during development (`render/index.html`, `bake.js`, the packer) and needs the model packs cloned next to it; see the commit message for sources. Rendering all 300 sprites takes about half a minute in headless Chromium with SwiftShader.

@@ -1406,7 +1406,7 @@ const YIELD = [15, 60, 110, 180, 300, 450, 700, 2200, 8000, 11000];   // people 
 const FISH = [6, 10, 16, 22, 30, 40, 60, 180, 500, 700];              // per coastal worked tile
 const TILE_POP = [4, 12, 22, 35, 55, 80, 120, 350, 1200, 1800];      // people per worked tile wanted
 const GROWTH = [0.010, 0.012, 0.014, 0.015, 0.016, 0.017, 0.019, 0.026, 0.022, 0.016];
-const ERA_YEARS = [500, 900, 800, 700, 650, 700, 450, 300, 200, 1e9];
+const ERA_YEARS = [900, 1400, 1100, 900, 750, 750, 480, 320, 220, 1e9];
 const REACH = [16, 22, 28, 34, 40, 46, 52, 60, 70, 80]; // how far from its capital a nation keeps new land colonies
 const ERA_TYPPOP = [50, 300, 1000, 3000, 8000, 15000, 30000, 100000, 300000, 1e6];
 const WOOD_RATE = [0.25, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0, 1.6, 2.2, 2.2];   // timber per forest tile per year
@@ -1552,7 +1552,7 @@ class World {
     s.cache=c; }
   nearRes(s,key){ const W=this.W,H=this.H,r=WORK_RADIUS[s.tier]; const t=RES_KEY.indexOf(key); for(let dy=-r;dy<=r;dy++){ const yy=s.y+dy; if(yy<0||yy>=H)continue; for(let dx=-r;dx<=r;dx++){ if(dx*dx+dy*dy>r*r+r)continue; const j=yy*W+(s.x+dx+W)%W; if(this.res[j]===t){ const o=this.owner[j]; if(o<0||o===s.nation||!this.nations[o].alive) return true; } } } return false; }
   wantBld(s){ return Math.ceil(s.pop/PPB[s.era]); }
-  capacity(s){ const c=s.cache, e=s.era; let f=6+c.fert/255*YIELD[e]+c.fish*FISH[e]; if(c.river&&e>=1) f*=1.1; const wb=this.wantBld(s); f*=1+0.3*Math.min(1,s.bld/Math.max(1,wb)); if(e>=7) f*=1+0.04*c.coal; if(s.capMul) f*=s.capMul; if(this.fallout){ const fl=this.fallout[this.idx(s.x,s.y)]; if(fl) f*=1-fl/255*0.9; } return f; }
+  capacity(s){ const c=s.cache, e=s.era; let f=(e===0?10:6)+c.fert/255*YIELD[e]+c.fish*FISH[e]; if(c.river&&e>=1) f*=1.1; const wb=this.wantBld(s); f*=1+0.3*Math.min(1,s.bld/Math.max(1,wb)); if(e>=7) f*=1+0.04*c.coal; if(s.capMul) f*=s.capMul; if(this.fallout){ const fl=this.fallout[this.idx(s.x,s.y)]; if(fl) f*=1-fl/255*0.9; } return f; }
   nationHas(s,key){ if(s.cache[key]>0)return true; const n=s.nation; if(n<0)return false; const N=this.nations[n]; return !!(N.has&&N.has[key]); }
   tradeHas(s,key){ const W=this.W; for(const o of this.nearby(s.x,s.y,2)){ if(!o.alive||o===s||!o.cache||!o.cache[key])continue; let dx=Math.abs(o.x-s.x); if(dx>W/2)dx=W-dx; if(dx*dx+(o.y-s.y)*(o.y-s.y)<=900){ if(o.nation<0||s.nation<0||!this.atWar(o.nation,s.nation))return true; } } return false; }
   gateNeed(era){ return era===2?'copper':era===3?'iron':era===7?'coal':era===8?'oil':null; }
@@ -1572,23 +1572,23 @@ class World {
 
   // ---------- expedition planning: Dijkstra over a local box, scoring candidates as they are settled ----------
   freeLandNear(s,R){ const W=this.W,H=this.H; let n=0; for(let dy=-R;dy<=R;dy+=2){ const yy=s.y+dy; if(yy<1||yy>=H-1)continue; for(let dx=-R;dx<=R;dx+=2){ const j=yy*W+(s.x+dx+W)%W; if(this.blocked[j])continue; const b=this.biome[j]; if(b<2||b===BI.ICE)continue; if(this.fert[j]<35&&!this.res[j])continue; const o=this.owner[j]; if(o>=0&&o!==s.nation&&this.nations[o].alive)continue; if(++n>=3)return true; } } return false; }
-  planExpedition(s,want){ const colony=want==='colony'; const far=want==='far'; const e=s.era; let R=colony?Math.min(70,30+e*6):far?Math.min(70,44+e*4):(want==='land'?Math.min(26,8+e*3):Math.min(40,14+e*5)); if(want==='land'&&s.fails)R=Math.min(34,R+5*s.fails);
+  planExpedition(s,want){ const colony=want==='colony'; const far=want==='far'; const e=s.era; let R=colony?Math.min(70,30+e*6):far?(e<=3?80:Math.min(70,44+e*4)):(want==='land'?Math.min(26,12+e*3):Math.min(40,14+e*5)); if(want==='land'&&s.fails)R=Math.min(34,R+5*s.fails);
     if(want==='land'&&!this.freeLandNear(s,R))return null; if(this.pfBudget<=0)return 'defer'; this.pfBudget--;
-    const sail=((s.cache.fish>0||this.coast[this.idx(s.x,s.y)]===1)&&e>=2)||(far&&e>=1&&this.coast[this.idx(s.x,s.y)]>=1); const deep=e>=6;
+    const sail=((s.cache.fish>0||this.coast[this.idx(s.x,s.y)]===1)&&e>=2)||(far&&this.coast[this.idx(s.x,s.y)]>=1); const deep=e>=6; const shoal=far&&e===0?3:5;
     const W=this.W,H=this.H; const side=2*R+1; const dist=this.pfDist, prev=this.pfPrev; const n=side*side; for(let i=0;i<n;i++){dist[i]=1e9;prev[i]=-1;}
-    const ox=s.x-R, oy=s.y-R; const budget=R*2; const buckets=new Array(budget+1); for(let k=0;k<=budget;k++)buckets[k]=[];
+    const ox=s.x-R, oy=s.y-R; const budget=(far&&e<=3)?R*3:R*2; const buckets=new Array(budget+1); for(let k=0;k<=budget;k++)buckets[k]=[];
     const start=R*side+R; dist[start]=0; buckets[0].push(start); const B=this.biome,E=this.elev,D=this.dland,F=this.fert,RS=this.res,O=this.owner,BL=this.blocked;
-    const need=(want==='land'||colony||far)?null:want; const nt=need?RES_KEY.indexOf(need):0; const maxC=need?20:colony?30:far?70:40; let found=0; let best=-1,bs=0.8; const rng=this.rng; const nat=s.nation;
+    const need=(want==='land'||colony||far)?null:want; const nt=need?RES_KEY.indexOf(need):0; const maxC=need?20:colony?30:far?70:40; let found=0; let best=-1,bs=far?0.45:0.8; const rng=this.rng; const nat=s.nation;
     for(let d=0;d<=budget&&found<maxC;d++){ const q=buckets[d]; for(let qi=0;qi<q.length;qi++){ const c=q[qi]; if(dist[c]!==d)continue; const lx=c%side, ly=(c-lx)/side; const gx=(ox+lx+W)%W, gy=oy+ly;
       // --- candidate test for this settled cell
       if(d>=6&&gy>=1&&gy<H-1){ const j=gy*W+gx; const bb=B[j]; if(bb>=2&&bb!==BI.ICE&&!BL[j]&&!(this.fallout&&this.fallout[j])){ const o=O[j]; if(o<0||o===nat||!this.nations[o].alive){
         let resScore=0, hasNeed=false; for(let dy=-1;dy<=1;dy++){ const yy=gy+dy; if(yy<0||yy>=H)continue; for(let dx=-1;dx<=1;dx++){ const rs=RS[yy*W+(gx+dx+W)%W]; if(!rs)continue; if(nt&&rs===nt)hasNeed=true; resScore+=e>=MINE_ERA[rs]?0.35:0.05; } }
-        if(!nt||hasNeed){ found++; let sc=F[j]/255*1.2+(this.river[j]?0.5:0)+(this.coast[j]===1?0.35:this.coast[j]?0.2:0)+Math.min(1.2,resScore)+(hasNeed?2.5:0);
+        if(!nt||hasNeed){ if(!(far&&d<budget*0.4))found++; let sc=F[j]/255*1.2+(this.river[j]?0.5:0)+(this.coast[j]===1?0.35:this.coast[j]?0.2:0)+Math.min(1.2,resScore)+(hasNeed?2.5:0);
           let nf=0; for(let dy=-2;dy<=2;dy+=2){ const yy=gy+dy; if(yy<0||yy>=H)continue; for(let dx=-2;dx<=2;dx+=2){ nf+=F[yy*W+(gx+dx+W)%W]; } } sc+=nf/255/9*0.6;
-          if(far){ sc+=d/budget*1.4-(d<budget*0.45?4:0)-(this.cultureAt(gx,gy)===s.cult?0.6:0); } else sc-=d/budget*(colony?0.5:0.9); sc+=rng()*0.15; if(sc>bs){bs=sc;best=c;} } } } }
+          if(far){ let nn=0; for(const o of this.nearby(gx,gy,1)){ if(o.alive)nn++; } sc+=d/budget*1.4-(d<budget*0.4?4:0)-(this.cultureAt(gx,gy)===s.cult?0.6:0)+(nn===0?1.3:nn<3?0.5:0); } else sc-=d/budget*(colony?0.5:0.9); sc+=rng()*0.15; if(sc>bs){bs=sc;best=c;} } } } }
       // --- relax neighbours
       for(let k=0;k<8;k++){ const nx=lx+DX8[k], ny=ly+DY8[k]; if(nx<0||ny<0||nx>=side||ny>=side)continue; const gy2=oy+ny; if(gy2<0||gy2>=H)continue; const j=gy2*W+((ox+nx+W)%W); const bb=B[j]; let cost;
-        if(bb===BI.ICE)continue; if(bb<2){ if(!sail)continue; if(!deep&&D[j]>5)continue; cost=deep?1:2; } else { cost=MOVE_COST[bb]+ELEV_COST[E[j]]; }
+        if(bb===BI.ICE)continue; if(bb<2){ if(!sail)continue; if(!deep&&D[j]>shoal)continue; cost=deep?1:2; } else { cost=MOVE_COST[bb]+ELEV_COST[E[j]]; }
         if(k===0||k===2||k===5||k===7)cost=Math.round(cost*1.4); const nd=d+cost; if(nd>budget)continue; const ni=ny*side+nx; if(nd<dist[ni]){ dist[ni]=nd; prev[ni]=c; buckets[nd].push(ni); } } } }
     if(best<0)return null; const path=[]; let c=best; while(c>=0){ const lx=c%side, ly=(c-lx)/side; path.push([(ox+lx+W)%W,oy+ly]); c=prev[c]; } path.reverse(); return {path,score:bs}; }
   launch(s,want){ const plan=this.planExpedition(s,want); if(plan==='defer'){ s.exp=1; return false; } if(!plan){ s.fails=(s.fails||0)+1; s.exp=Math.min(240,20*Math.pow(1.6,s.fails))+this.rng()*20; return false; } s.fails=0;
@@ -1599,16 +1599,17 @@ class World {
     const ex={id:this.nextEid++,from:s.id,fromName:s.name,nation:s.nation,cult:s.cult,n,want,path:plan.path,i:0,prog:0,speed:spd,tech:s.tech,alive:true,t0:this.year,sea};
     this.exps.push(ex); if(s.tier>=2||want!=='land'){ const goal=plan.path[plan.path.length-1]; this.addLog(want==='far'?`${n} wanderers leave ${s.name} to seek a homeland of their own`:`${s.name} sends ${n} settlers ${want==='land'?'to new land':want==='colony'?'overseas':'in search of '+want}`,'exp'); }
     s.exp=(want==='land'?18:40)+this.rng()*24; return true; }
-  relocate(s){ // whole camp moves to better land
-    const plan=this.planExpedition(s,'land'); if(plan==='defer'){ s.exp=1; return false; } if(!plan){ s.fails=(s.fails||0)+1; s.exp=30+this.rng()*30; return false; } s.fails=0; const n=Math.round(s.pop); const ex={id:this.nextEid++,from:s.id,fromName:s.name,nation:-1,cult:s.cult,n,want:'home',path:plan.path,i:0,prog:0,speed:0.9,tech:s.tech,alive:true,t0:this.year,sea:false,nomad:true};
+  relocate(s){ // whole camp moves to better land, or far away once nearby land has failed them
+    const plan=this.planExpedition(s,(s.fails||s.wanderers)?'far':'land'); if(plan==='defer'){ s.exp=1; return false; } if(!plan){ s.fails=(s.fails||0)+1; s.exp=30+this.rng()*30; return false; } s.fails=0; const n=Math.round(s.pop); const ex={id:this.nextEid++,from:s.id,fromName:s.name,nation:-1,cult:s.cult,n,want:'home',path:plan.path,i:0,prog:0,speed:0.9,tech:s.tech,alive:true,t0:this.year,sea:plan.path.some(p=>this.biome[p[1]*this.W+p[0]]<2),nomad:true,wanderers:s.wanderers};
     this.exps.push(ex); this.addLog(`The people of ${s.name} move on in search of better land`,'exp'); this.kill(s,'abandoned',true); return true; }
   stepExps(){ const W=this.W; const sm=this.dt<1?5:1; for(const e of this.exps){ if(!e.alive)continue; e.prog+=e.speed*sm; while(e.prog>=1){ e.prog-=1; e.i++; if(e.i>=e.path.length-1){ e.i=e.path.length-1; this.arrive(e); break; } const p=e.path[e.i]; const b=this.biome[p[1]*W+p[0]]; if(b===BI.DESERT||b===BI.TUNDRA||this.elev[p[1]*W+p[0]]>=2) e.n*=0.985; else e.n*=0.997; if(e.n<4){ e.alive=false; break; } } }
     if(this.tick%50===0) this.exps=this.exps.filter(e=>e.alive); }
   arrive(e){ e.alive=false; const [x,y]=e.path[e.path.length-1]; const i=this.idx(x,y); const n=Math.round(e.n); if(n<4)return;
     const near=this.settlementAt(x,y,SPACING); if(near){ near.pop+=n; near.food+=n; return; }
+    if((e.want==='far'||e.nomad)&&e.tech<4&&(e.hops||0)<6&&this.fert[i]<60&&this.coast[i]!==1&&this.pfBudget>0){ const tmp={x,y,era:Math.floor(e.tech),cult:e.cult,nation:-1,cache:{fish:0},fails:0}; const plan=this.planExpedition(tmp,'far'); if(plan&&plan!=='defer'){ const e2=Object.assign({},e,{id:this.nextEid++,path:plan.path,i:0,prog:0,alive:true,hops:(e.hops||0)+1,sea:plan.path.some(p=>this.biome[p[1]*this.W+p[0]]<2)}); this.exps.push(e2); return; } }
     let nat=e.want==='far'?-1:e.nation; if(nat>=0&&!this.nations[nat].alive)nat=-1; const o=this.owner[i]; if(o>=0&&o!==nat&&this.nations[o].alive) nat=-1;
     if(nat>=0&&e.want==='land'){ const N=this.nations[nat]; const cap=this.settlements[N.capital]; if(cap){ let ddx=Math.abs(cap.x-x); if(ddx>this.W/2)ddx=this.W-ddx; if(ddx*ddx+(cap.y-y)*(cap.y-y)>REACH[N.era]*REACH[N.era]&&o!==nat) nat=-1; } }
-    const s=this.found(x,y,n,nat,false); s.tech=Math.max(0,e.tech-0.15); s.era=Math.floor(s.tech); s.food=n; s.wood=12; if(e.want==='colony'&&nat>=0){ s.colony=true; if(e.charter)s.overseas=true; s.cult=this.nations[nat].cult; s.wood=40; s.food=n*2; } this.recache(s); if(nat>=0){ this.nations[nat].count++; }
+    const s=this.found(x,y,n,nat,false); s.tech=Math.max(0,e.tech-0.15); s.era=Math.floor(s.tech); s.food=n; s.wood=12; if(e.wanderers||e.want==='far')s.wanderers=true; if(e.want==='colony'&&nat>=0){ s.colony=true; if(e.charter)s.overseas=true; s.cult=this.nations[nat].cult; s.wood=40; s.food=n*2; } this.recache(s); if(nat>=0){ this.nations[nat].count++; }
     if(e.want!=='land'&&e.want!=='home'){ for(let k=0;k<3;k++)this.claimTile(s); }
     const from=this.settlements[e.from]; const fromName=e.fromName;
     if(e.label) this.addLog(`${e.label} makes landfall: the colony of ${s.name} is founded for ${nat>=0?this.nations[nat].name:fromName}`,'found'); else if(e.nomad) this.addLog(`The people of ${fromName} settle at ${s.name}`,'found'); else if(e.want==='far'){ s.wanderers=true; this.addLog(`Wanderers from ${fromName} settle far away at ${s.name}`,'found'); } else if(e.want==='land') { if(from&&from.tier>=2) this.addLog(`${fromName} founds ${s.name}`,'found'); } else if(e.want==='colony') this.addLog(`${fromName} founds the colony of ${s.name}`,'found'); else this.addLog(`Settlers from ${fromName} found ${s.name} to mine ${e.want}`,'found');
@@ -1636,7 +1637,7 @@ class World {
           if(s.unrest>=1&&s.id!==N.capital&&N.count>1){ this.rebel(s,N); continue; } }
         else { s.unrest=Math.max(0,(s.unrest||0)-0.01*Y+relDiff*um*Y); if(s.unrest<0.4)s.turmoil=false; } }
       // --- population
-      let dp; if(s.food<0) dp=-s.pop*0.012; else if(s.pop<cap) dp=s.pop*GROWTH[e]*(1-s.pop/cap)*(0.8+0.4*rng()); else dp=-(s.pop-cap)*0.08-s.pop*0.004;
+      let dp; if(s.food<0) dp=-s.pop*0.012; else if(s.pop<cap) dp=s.pop*GROWTH[e]*(1-s.pop/cap)*(0.8+0.4*rng()); else dp=-(s.pop-cap)*(e===0?0.03:0.08)-s.pop*0.004;
       if(s.nation>=0&&this.nations[s.nation].wars.size) dp-=s.pop*0.002; if(s.unrest>0.5&&dp>0) dp*=0.4;
       s.pop+=dp*Y; if(this.fallout&&this.fallout[this.idx(s.x,s.y)]){ s.pop*=1-0.02*Y; }
       if(s.pop<3){ this.kill(s,'abandoned'); continue; }
@@ -1656,14 +1657,15 @@ class World {
       else if(s.pop<TIER_POP[s.tier]*0.6&&s.tier>0){ s.tier--; this.dirtyPolitical=true; }
       // --- expeditions / migration
       s.exp-=Y; if(s.exp<=0){ let want=null; const need=this.gateNeed(e+1);
-        if(e===0&&cap<30&&s.pop>=10){ this.relocate(s); continue; }
+        if(e<=1&&cap<30&&s.pop>=8&&s.exp<=0){ this.relocate(s); continue; }
         if(need&&!this.nationHas(s,need)&&s.tech>e+0.35&&!this.nearRes(s,need)&&T>(s.failT||0)) want=need;
         else if(s.pop>=22&&s.pop>=0.7*cap&&s.nt>=this.maxTiles(s)*0.8) want='land';
         else if(s.pop>=22&&s.pop>=0.85*cap&&s.nt>=this.wantTiles(s)&&rng()<0.6) want='land';
         else if(s.pop>=60&&s.food>s.pop*1.5&&rng()<0.35) want='land';
         else if(e>=6&&s.tier>=3&&s.cache.fish>0&&rng()<0.12) want='colony';
-        else if(s.pop>=40&&s.food>s.pop*1.2&&rng()<0.012) want='far';
-        if(want==='land'&&(rng()<0.08||(s.outs>=3&&rng()<0.18)))want='far';
+        else if(s.pop>=(s.wanderers?24:40)&&s.food>s.pop*1.1&&rng()<(e<=1?0.045:e<=3?0.03:0.012)) want='far';
+        else if(e<=3&&s.pop>=30&&!this.freeLandNear(s,10)&&rng()<0.06) want='far';
+        if(want==='land'&&(rng()<(e<=3?0.2:0.08)||(s.outs>=3&&rng()<0.18)))want='far';
         if(want){ if(!this.launch(s,want)&&want!=='land'&&want!=='colony'&&!s.saving){ s.failT=T+150; } } else s.exp=10+rng()*10; }
       s.want=s.saving||null;
       // --- nation formation / joining
