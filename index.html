@@ -77,7 +77,10 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);ou
 .tlrow{display:flex;align-items:center;gap:8px}.tlrow input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}.tlbtn{width:34px;height:30px;border-radius:8px;background:var(--panel-2);border:1px solid var(--line);font-size:13px;display:grid;place-items:center}.tllive{width:auto;padding:0 10px;color:var(--accent-ink);background:var(--accent);border-color:var(--accent);font-weight:600}.tly{font-family:var(--display);font-weight:700;font-size:14px;min-width:84px;text-align:center;font-variant-numeric:tabular-nums}
 .tlinfo{display:flex;gap:10px;font-size:12px;color:var(--muted);align-items:baseline;flex-wrap:wrap}.tlevs{display:flex;gap:6px;flex-wrap:wrap}.tlev{border:1px solid var(--line);border-radius:999px;padding:1px 8px;white-space:nowrap;max-width:60vw;overflow:hidden;text-overflow:ellipsis}.tlev.war{color:#f0a894}.tlev.nation{color:var(--accent)}.tlev.faith{color:#d8c9a0}.tlev.bad{color:#e49a86}
 .row.mk .spark{width:60px;height:18px;color:var(--info);flex:0 0 auto}.row.mk .sub{flex:0 0 auto;max-width:34%;overflow:hidden;text-overflow:ellipsis}
-.toast.saga,.toast.age,.toast.win{border-left-color:var(--accent)}.ev.saga,.ev.age,.ev.win{color:var(--accent)}.pbar.shift{top:calc(env(safe-area-inset-top,0px) + 88px)}.btn.amb-pick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:8px 10px;margin-bottom:6px}.amb{padding:8px 10px;border:1px solid var(--line);border-radius:8px}
+.toast.saga,.toast.age,.toast.win{border-left-color:var(--accent)}.ev.saga,.ev.age,.ev.win{color:var(--accent)}.pbar.shift{top:calc(env(safe-area-inset-top,0px) + 112px)}
+body.haspeople #toasts{top:calc(env(safe-area-inset-top,0px) + 112px)}
+.pbar.lbar{top:calc(env(safe-area-inset-top,0px) + 72px);max-width:calc(100vw - 20px);overflow:hidden;white-space:nowrap}
+.pbar.lbar .pbs{overflow:hidden;text-overflow:ellipsis}.btn.amb-pick{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;text-align:left;padding:8px 10px;margin-bottom:6px}.amb{padding:8px 10px;border:1px solid var(--line);border-radius:8px}
 .toast.faith{border-left-color:#d8c9a0}.ev.faith{color:#d8c9a0}
 .meter{height:6px;border-radius:3px;background:var(--panel-2);overflow:hidden}
 .meter i{display:block;height:100%;background:var(--good)}
@@ -98,6 +101,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);ou
 .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6);max-height:100%;overflow-y:auto}
 .card h1{font-family:var(--display);font-size:24px;margin:0 0 4px;color:var(--accent);letter-spacing:.03em;text-wrap:balance}
 .card p{margin:8px 0;color:var(--ink)}
+#guide summary{cursor:pointer;color:var(--accent);font-weight:600;margin:10px 0 4px}#guide>p,#guide ul{color:var(--muted)}#welcome{font-size:15px;line-height:1.45}
 .card ul{margin:8px 0 12px 18px;padding:0;color:var(--muted);font-size:13.5px}
 .card li{margin:4px 0}
 .card li b{color:var(--ink)}
@@ -173,6 +177,8 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);ou
 <div id="help">
   <div class="card">
     <h1>Cradle of Nations</h1>
+    <p id="welcome">Put a band of people down anywhere on Earth. They are <b>your people</b>: watch them hunt, raise their first huts, and set out to fill the world. Choose an ambition for them, and spend the favour they earn to tip history their way.</p>
+    <details id="guide"><summary>How it all works</summary>
     <p>A real-world map with real geography: rivers, mountain ranges, deserts, fertile plains, and the mineral deposits that shaped history. Drop people anywhere and watch them clear fields, cut timber, dig mines, raise buildings, and send expeditions out to find what they lack.</p>
     <ul>
       <li><b>Settlers</b> places a band of people. A riverbank or coast is the best start; barren camps will pack up and move.</li>
@@ -193,6 +199,7 @@ button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);ou
     <div class="legend" aria-label="Mineral legend">
       <span><i style="background:#9fb2c4"></i>Iron</span><span><i style="background:#2b2b2b;border:1px solid #666"></i>Coal</span><span><i style="background:#d8742a"></i>Copper</span><span><i style="background:#f2cf3a"></i>Gold</span><span><i style="background:#6a3fb5"></i>Oil</span><span><i style="background:#58d6e6"></i>Gems</span>
     </div>
+    </details>
     <div class="btnrow" style="margin-top:14px"><button class="btn primary" id="helpClose">Begin</button><button class="btn danger" id="resetWorld">Reset world</button></div>
   </div>
 </div>
@@ -1413,7 +1420,7 @@ const YIELD = [15, 60, 110, 180, 300, 450, 700, 2200, 8000, 11000];   // people 
 const FISH = [6, 10, 16, 22, 30, 40, 60, 180, 500, 700];              // per coastal worked tile
 const TILE_POP = [4, 12, 22, 35, 55, 80, 120, 350, 1200, 1800];      // people per worked tile wanted
 const GROWTH = [0.010, 0.012, 0.014, 0.015, 0.016, 0.017, 0.019, 0.026, 0.022, 0.016];
-const ERA_YEARS = [900, 1400, 1100, 900, 750, 750, 480, 320, 220, 1e9];
+const ERA_YEARS = [600, 1000, 900, 800, 700, 700, 450, 300, 220, 1e9];
 const REACH = [16, 22, 28, 34, 40, 46, 52, 60, 70, 80]; // how far from its capital a nation keeps new land colonies
 const ERA_TYPPOP = [50, 300, 1000, 3000, 8000, 15000, 30000, 100000, 300000, 1e6];
 const WOOD_RATE = [0.25, 0.4, 0.5, 0.6, 0.7, 0.8, 1.0, 1.6, 2.2, 2.2];   // timber per forest tile per year
@@ -1496,7 +1503,7 @@ class World {
     if(maxEra>L.maxEra){ L.maxEra=maxEra; this.milestone('A new age for your people: the '+ERA_NAMES[maxEra]+' ('+conts.size+' continent'+(conts.size===1?'':'s')+', '+Math.round(share*100)+'% of humanity)','age'); }
     if(nats>0&&!L.firstNation){ L.firstNation=true; this.milestone(bigN.name+' is the first nation of your people'); }
     if(cities>0&&!L.cities&&big)this.milestone(big.name+' grows into the first great city of your people'); L.cities=cities;
-    for(const th of [2,5,10,20,50]){ if(cults.size>=th&&L.cultures<th)this.milestone('Your people have become '+th+' distinct peoples'); }
+    for(const th of [2,5,10,20,50]){ if(count>=th*3&&cults.size>=th&&L.cultures<th)this.milestone('Your people have become '+th+' distinct peoples'); }
     { let others=0; for(const s of this.settlements){ if(s.alive&&s.line!==1){others++; if(others>2)break;} } if(others>2)for(const th of [0.1,0.25,0.5]){ if(share>=th&&L.peakShare<th)this.milestone('Your people are '+Math.round(th*100)+'% of humanity'); } }
     { const big=L.bigNats||{}; const cur={}; for(const N of this.nations){ if(N.alive&&N.line===1&&N.count>=6)cur[N.id]=N.name; } for(const id in big){ if(!cur[id]){ const N=this.nations[id]; if(!N||!N.alive)this.milestone(big[id]+', a nation of your people, has fallen','bad'); } } L.bigNats=cur; }
     Object.assign(L,{pop,count,share,nations:nats,cultures:Math.max(L.cultures,cults.size),continents:[...conts].filter(c=>c>=0),peakShare:Math.max(L.peakShare,share)});
@@ -2199,7 +2206,7 @@ let cssW=1,cssH=1,dpr=1;
 const cam={x:W/2,y:H*0.45,z:1};
 const settings={political:true,resources:false,faith:false,tradeRoutes:false,tool:'inspect',settlers:10,speed:1};
 let tl={on:false,idx:-1,playing:false,canvas:null,lastIdx:-2,lastT:0};
-const SPEEDS=[0,2,6,10,20,60,200]; const NSPEED=SPEEDS.length;
+const SPEEDS=[0,5,12,20,40,80,200]; const NSPEED=SPEEDS.length;
 const RES_COL=[null,[159,178,196],[48,48,48],[216,116,42],[242,207,58],[106,63,181],[88,214,230]];
 const RES_LABEL=['','Iron','Coal','Copper','Gold','Oil','Gems'];
 const NEUTRAL=[154,163,173];
@@ -2804,7 +2811,7 @@ function drawTraffic(c,z,now,x0,y0,x1,y1){ let drawn=0; const q=qz(z);
       if(kind==='steam'){ const tt=(now/500+h)%1; c.fillStyle=`rgba(150,150,150,${0.5*(1-tt)})`; c.beginPath(); c.arc(px+Math.cos(ang)*dir*z*0.2-tt*z*0.1,py-z*0.2-tt*z*0.15,z*0.03+tt*z*0.05,0,6.283); c.fill(); }
       drawn++; } } }
 // ---- lumber camps: standing timber, felling, log piles, mills ----
-const TREE_SPOTS=[[0.22,0.32],[0.68,0.24],[0.4,0.64],[0.8,0.7]];
+const TREE_SPOTS=[[0.22,0.32],[0.68,0.24],[0.4,0.64],[0.8,0.7],[0.5,0.42]];
 function fellSpot(j){ const h=hash(j*7+3); const k=Math.floor(hash(j*19+1)*4); const sp=TREE_SPOTS[k]; const jx=(hash(j*23+k)-0.5)*0.12, jy=(hash(j*29+k)-0.5)*0.12; return [sp[0]+jx,sp[1]+jy,h<0.5?1:-1,k]; }
 const TREE_R=0.2;
 const TREES={4:['nf.tree_pine','nf.tree_pine_tall','km.tree_single_A','nf.tree_pine'],5:['nf.tree_oak','nf.tree_fat','nf.tree_dark','km.tree_single_B','nf.tree_oak'],10:['nf.tree_palm','nf.tree_fat','nf.tree_palm','nf.tree_dark'],9:['nf.tree_fat','nf.bush_large','nf.tree_palm'],3:['nf.tree_dark','nf.bush','nf.tree_pine'],6:['nf.tree_oak','nf.bush_large'],7:['nf.bush_large','nf.tree_fat'],8:['nf.bush','nf.bush']};
@@ -2813,7 +2820,7 @@ function stumpSprite(q){ return aspr('nf.stump',q,0.7); }
 function logSprite(q){ return aspr('nf.log',q,0.9); }
 function millSprite(era,q){ return aspr(era<=2?'km.tent':era<=6?`km.lumbermill.${EC[era]}`:'nf.hangar',q,era>=7?0.45:0.85); }
 function drawForestBits(c,era,px,py,z,j,now,b,st){ const h=hash(j*7+3); const lod=z>=30?2:1; const r=z*TREE_R; const kind=b; const q=qz(z); const [fx,fy,dir,fk]=fellSpot(j); const camp=h<0.3; const cutN=era>=7?2:era>=3?1:0; const stat=st!==false, dynm=st!==true;
-  if(stat)for(let q2=0;q2<4;q2++){ if(q2===fk)continue; const sp=TREE_SPOTS[q2]; const tx=px+z*(sp[0]+(hash(j*23+q2)-0.5)*0.12), ty=py+z*(sp[1]+(hash(j*29+q2)-0.5)*0.12+0.12); const cut=((q2+Math.floor(h*4))%4)<cutN;
+  if(stat)for(let q2=0;q2<5;q2++){ if(q2===fk)continue; if(q2===4&&hash(j*37+1)<0.5)continue; if(q2===3&&hash(j*41+2)<0.25)continue; const sp=TREE_SPOTS[q2]; const tx=px+z*(sp[0]+(hash(j*23+q2)-0.5)*0.3), ty=py+z*(sp[1]+(hash(j*29+q2)-0.5)*0.3+0.12); const cut=((q2+Math.floor(h*4))%4)<cutN;
     const ts0=cut?stumpSprite(q):treeSprite(kind,q2%4,q,0.8+0.2*Math.floor(hash(j*31+q2)*3)); if(ts0)blit(c,ts0,tx,ty,z); }
   if(stat&&camp){ const lg=logSprite(q); if(lg)blit(c,lg,px+z*0.5,py+z*0.93,z); const ml=millSprite(era,q); if(ml)blit(c,ml,px+z*0.2,py+z*0.95,z); }
   if(stat&&!camp&&era<=6&&hash(j*13+5)>0.9){ const an=animalSprite(hash(j*3)<0.5?'deer':'fox','idle',q); if(an)blit(c,an,px+z*0.55,py+z*0.5,z); }
@@ -2961,7 +2968,7 @@ function draw(now){ if(!world||DBG.freeze)return; if(PROF.on){ PROF.cur='pre'; P
     const ang=Math.atan2(q2[1]-p[1],q2[0]-p[0]); const r=Math.max(4,Math.min(8,z*0.9));
     if(z>=16&&!lite)drawBand(e,p,q2,fx,fy,ang,z,q,now,col,mine);
     else { ctx.save(); ctx.translate(px,py); ctx.rotate(ang); ctx.beginPath(); ctx.moveTo(r,0); ctx.lineTo(-r*0.7,r*0.6); ctx.lineTo(-r*0.3,0); ctx.lineTo(-r*0.7,-r*0.6); ctx.closePath(); ctx.fillStyle=mine?'#d9a441':rgb(col); ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.2; ctx.stroke(); ctx.restore(); if(e.sea){ ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.beginPath(); ctx.arc(px,py,r+2,0.2,2.9); ctx.stroke(); } }
-    if(z>=4&&(z<12||sel||mine)){ ctx.font=`400 10px 'Source Sans 3',system-ui,sans-serif`; ctx.textAlign='center'; ctx.textBaseline='top'; const t=e.label?e.label:(mine?'your people: ':'')+(e.want==='far'?`${Math.round(e.n)} wanderers`:e.want==='land'?`${Math.round(e.n)} settlers`:e.want==='home'?'migrating':e.want==='colony'?(e.charter?'colonial charter':'colonists'):`seeking ${e.want}`); ctx.lineWidth=3; ctx.strokeStyle='rgba(8,10,14,.8)'; ctx.fillStyle=mine?'#ffe2a0':'#fff'; ctx.strokeText(t,px,py+r+2+(z>=16?z*0.25:0)); ctx.fillText(t,px,py+r+2+(z>=16?z*0.25:0)); }
+    if((z>=7&&(z<12||sel||mine))||(sel&&z>=4)){ ctx.font=`400 10px 'Source Sans 3',system-ui,sans-serif`; ctx.textAlign='center'; ctx.textBaseline='top'; const t=e.label?e.label:(mine?'your people: ':'')+(e.want==='far'?`${Math.round(e.n)} wanderers`:e.want==='land'?`${Math.round(e.n)} settlers`:e.want==='home'?'migrating':e.want==='colony'?(e.charter?'colonial charter':'colonists'):`seeking ${e.want}`); ctx.lineWidth=3; ctx.strokeStyle='rgba(8,10,14,.8)'; ctx.fillStyle=mine?'#ffe2a0':'#fff'; ctx.strokeText(t,px,py+r+2+(z>=16?z*0.25:0)); ctx.fillText(t,px,py+r+2+(z>=16?z*0.25:0)); }
     if(sel){ ctx.beginPath(); ctx.arc(px,py,r+6,0,6.283); ctx.strokeStyle='#d9a441'; ctx.lineWidth=2; ctx.stroke(); } }
   PF('trade');
   const selN=selected&&selected.type==='nation'?selected.id:-1;
@@ -3074,7 +3081,14 @@ function updateHud(){ let maxEra=0,alive=0,nats=0,exps=0; for(const s of world.s
   yearEl.firstChild.nodeValue=world.yearStr(); eraLine.textContent=alive?`Most advanced: ${ERA_NAMES[maxEra]}`:'Nothing stirs yet';
   if(alive&&maxEra>maxEraSeen){ if(maxEraSeen>=0)toast(`The world enters the ${ERA_NAMES[maxEra]}`,'tech'); maxEraSeen=maxEra; }
   $('stNations').textContent=nats; $('stPop').textContent=fmt(world.totalPop()); $('stSettl').textContent=alive.toLocaleString(); $('stExp').textContent=exps; $('stExpWrap').hidden=exps===0; updatePlayerBar(); }
-function updatePlayerBar(){ updateLineageBar(); const bar=$('pbar'); const N=world.player>=0?world.nations[world.player]:null; if(!N||!N.alive){ if(world.player>=0&&N&&!N.alive){ toast('Your nation has fallen',' bad'); world.player=-1; } bar.hidden=true; return; } bar.hidden=false; $('pbName').textContent=N.name; $('pbSw').style.background=rgb(N.color); const bal=(N.income||0)-(N.expense||0); $('pbStats').innerHTML=`<span>${fmt(N.treasury||0)} ◉</span><span class="${bal<0?'neg':'pos'}">${bal>=0?'+':'−'}${fmt(Math.abs(bal))}/yr</span><span>${fmt(N.army||0)} troops</span>${N.wars.size?`<span class="warn">⚔ ${N.wars.size} war${N.wars.size>1?'s':''}</span>`:''}${N.nukes?`<span>☢ ${N.nukes}</span>`:''}`; }
+const ARC=[
+  {k:'speed',when:L=>world.tick>40&&settings.speed<=1,msg:'Years pass slowly at 1×. Tap 3× or 5× to see your camp grow.'},
+  {k:'band',when:L=>world.exps.some(e=>e.alive&&e.line===1),msg:'A band has set out to found a new camp. Open Your people and tap Watch to follow them.'},
+  {k:'bless',when:L=>L.favour>=8&&world.tick>200,msg:'You have favour. Bless the land around a camp to make it richer, or Exodus to send a band far away.'},
+  {k:'nation',when:L=>L.nations>0,msg:'Your people have founded a nation. Borders, wars and alliances start here; tap a nation to read about it.'},
+  {k:'zoom',when:L=>L.count>=6,msg:'Pinch out to see how far your people have spread; the dots are their camps.'}];
+let arcT=0; function tickArc(now){ const L=world.lineage; if(!L||L.lost||now-arcT<9000)return; L.seen=L.seen||{}; for(const a of ARC){ if(L.seen[a.k])continue; if(a.when(L)){ L.seen[a.k]=true; hint(a.msg,6000); arcT=now; dirtySave=true; return; } } }
+function updatePlayerBar(){ updateLineageBar(); document.body.classList.toggle('haspeople',!!world.lineage); tickArc(performance.now()); const bar=$('pbar'); const N=world.player>=0?world.nations[world.player]:null; if(!N||!N.alive){ if(world.player>=0&&N&&!N.alive){ toast('Your nation has fallen',' bad'); world.player=-1; } bar.hidden=true; return; } bar.hidden=false; $('pbName').textContent=N.name; $('pbSw').style.background=rgb(N.color); const bal=(N.income||0)-(N.expense||0); $('pbStats').innerHTML=`<span>${fmt(N.treasury||0)} ◉</span><span class="${bal<0?'neg':'pos'}">${bal>=0?'+':'−'}${fmt(Math.abs(bal))}/yr</span><span>${fmt(N.army||0)} troops</span>${N.wars.size?`<span class="warn">⚔ ${N.wars.size} war${N.wars.size>1?'s':''}</span>`:''}${N.nukes?`<span>☢ ${N.nukes}</span>`:''}`; }
 function toast(msg,kind){ const box=$('toasts'); if(box.children.length>=3)box.removeChild(box.firstChild); const el=document.createElement('div'); el.className='toast '+(kind||''); el.textContent=msg; box.appendChild(el); setTimeout(()=>{ if(el.parentNode)el.parentNode.removeChild(el); },5200); }
 function pollLog(){ const L=world.log; if(L.length<lastLogLen)lastLogLen=0; const cands=[]; for(let i=lastLogLen;i<L.length;i++){ const e=L[i]; if(e.k==='saga'||e.k==='age'||e.k==='win'||e.k==='nation'||e.k==='war'||e.k==='found'||e.k==='good'||e.k==='peace'||e.k==='faith'||(e.k==='bad'&&/meteor|breaks out|run its course|has fallen|conquers|Turmoil|bankrupt|crisis/.test(e.s))||(e.k==='grow'&&/city|metropolis/.test(e.s))||(e.k==='tech'&&/enlightened/.test(e.s))||(e.k==='exp'&&/search of|overseas/.test(e.s))) cands.push(e); } lastLogLen=L.length;
   for(const e of cands.slice(-2)) toast(e.s,e.k==='found'||e.k==='exp'?'good':e.k); }
@@ -3190,7 +3204,7 @@ function tapAt(px,py){ const [fx,fy]=screenToCell(px,py); const x=Math.floor(fx)
     case 'prophet': { const err=w.prophet(x,y); if(err){ hint(err,2000); return; } effects.push({x,y,r:5,t0:performance.now(),dur:1100,color:'#d8c9a0'}); spendFavour(); dirtySave=true; return; }
     case 'golden': { const err=w.goldenAge(x,y); if(err){ hint(err,2000); return; } effects.push({x,y,r:6,t0:performance.now(),dur:1200,color:'#ffd27a'}); spendFavour(); dirtySave=true; return; }
     case 'inspect': { if(overview()){ const o=w.owner[i]; if(o>=0&&w.nations[o].alive){ showNation(w.nations[o]); return; } showTile(x,y); return; } const ar=nearA(16); if(ar){ showArmy(ar); return; } const fl=nearF(16); if(fl){ showFleet(fl); return; } const ex=nearE(14); if(ex){ showExp(ex); return; } const s=nearS(16); if(s){ showSettlement(s); return; } showTile(x,y); return; }
-    case 'settlers': { const hadLine=!!w.lineage; const s=w.placeSettlers(x,y,settings.settlers); if(!s){ hint('Settlers need dry land that is not ice',2000); return; } effects.push({x,y,r:3,t0:performance.now(),dur:700,color:'#d9a441'}); dirtySave=true; if(!hadLine&&w.lineage){ updateLineageBar(); centerOn(s.x,s.y,Math.max(cam.z,56)); settings.speed=1; hint('Your people make camp. Watch them hunt, gather and raise their first huts.',4200); setTimeout(showAmbitions,1200); } if(s.pop>settings.settlers){ hint(`${settings.settlers} people join ${s.name}`,1800); } else if(w.fert[i]<30){ hint(`${s.name} is founded on barren land; they will struggle here`,2600); } else if(w.river[i]||w.coast[i]){ hint(`${s.name} is founded by the water, a good start`,2200); } return; }
+    case 'settlers': { const hadLine=!!w.lineage; const s=w.placeSettlers(x,y,settings.settlers); if(!s){ hint('Settlers need dry land that is not ice',2000); return; } effects.push({x,y,r:3,t0:performance.now(),dur:700,color:'#d9a441'}); dirtySave=true; if(!hadLine&&w.lineage){ updateLineageBar(); centerOn(s.x,s.y,Math.max(cam.z,56)); settings.speed=2; for(let j=0;j<NSPEED;j++)$('sp'+j).classList.toggle('on',j===2); hint('Your people make camp. Watch them hunt, gather and raise their first huts.',4200); setTimeout(showAmbitions,1200); } if(s.pop>settings.settlers){ hint(`${settings.settlers} people join ${s.name}`,1800); } else if(w.fert[i]<30){ hint(`${s.name} is founded on barren land; they will struggle here`,2600); } else if(w.river[i]||w.coast[i]){ hint(`${s.name} is founded by the water, a good start`,2200); } return; }
     case 'bless': { if(w.biome[i]<2){ hint('Bless land, not water',1600); return; } w.bless(x,y,4); effects.push({x,y,r:4,t0:performance.now(),dur:900,color:'#8fe3a4'}); spendFavour(); dirtySave=true; return; }
     case 'plague': { const n=w.plague(x,y,6); effects.push({x,y,r:6,t0:performance.now(),dur:900,color:'#c66'}); if(!n){ hint('No one lives there to sicken',1600); return; } spendFavour(); dirtySave=true; return; }
     case 'meteor': { w.meteor(x,y,3); effects.push({x,y,r:3,t0:performance.now(),dur:900,color:'#ff9b4a'}); effects.push({x,y,r:7,t0:performance.now(),dur:1300,color:'rgba(255,120,60,.6)'}); spendFavour(); dirtySave=true; return; }
