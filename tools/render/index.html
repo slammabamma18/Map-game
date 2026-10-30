@@ -20,7 +20,7 @@ const hemi=new THREE.HemisphereLight(0xdfe8ff,0x8a7a60,1.15); scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xfff2dc,2.1); sun.position.set(-6,10,5); sun.castShadow=true; sun.shadow.mapSize.set(2048,2048); const sc=sun.shadow.camera; sc.left=-4; sc.right=4; sc.top=4; sc.bottom=-4; sc.near=0.1; sc.far=40; sun.shadow.bias=-0.0008; sun.shadow.radius=4; scene.add(sun);
 const fill=new THREE.DirectionalLight(0xcfe2ff,0.5); fill.position.set(6,4,-4); scene.add(fill);
 const ground=new THREE.Mesh(new THREE.PlaneGeometry(60,60),new THREE.ShadowMaterial({opacity:0.32})); ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
-const gltf=new GLTFLoader(), fbx=new FBXLoader(); const draco=new DRACOLoader(); draco.setDecoderPath('/node_modules/three/examples/jsm/libs/draco/'); gltf.setDRACOLoader(draco); gltf.setMeshoptDecoder(MeshoptDecoder);
+const gltf=new GLTFLoader(), fbx=new FBXLoader(); const draco=new DRACOLoader(); draco.setDecoderPath('/tools/node_modules/three/examples/jsm/libs/draco/'); gltf.setDRACOLoader(draco); gltf.setMeshoptDecoder(MeshoptDecoder);
 const cache=new Map();
 async function load(url){ if(cache.has(url))return cache.get(url); let p; if(/\.fbx$/i.test(url)){ p=new Promise((res,rej)=>fbx.load(url,o=>res({scene:o,animations:o.animations||[]}),undefined,rej)); } else { p=new Promise((res,rej)=>gltf.load(url,g=>res({scene:g.scene,animations:g.animations||[]}),undefined,rej)); } cache.set(url,p); return p; }
 function prep(obj){ obj.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; const ms=Array.isArray(o.material)?o.material:[o.material]; for(const m of ms){ if(m&&m.map){ m.map.colorSpace=THREE.SRGBColorSpace; m.map.minFilter=THREE.LinearMipmapLinearFilter; } if(m){ m.side=THREE.FrontSide; } } } }); }
@@ -28,6 +28,7 @@ let current=null;
 // render one model: returns cropped png + anchor + native size. opts: {scale, anim, t, yaw, tint:{h,s,l}}
 window.renderModel=async function(url,opts){ opts=opts||{}; const {scene:src,animations}=await load(url); if(current){ scene.remove(current); } const obj=src.clone(true); // skinned clones need SkeletonUtils; use the original for animated models
   const root=animations.length?src:obj; prep(root); root.rotation.set((opts.rx||0)*Math.PI/180,(opts.yaw||0)*Math.PI/180,0); root.position.set(0,0,0); root.scale.set(1,1,1); root.updateMatrixWorld(true);
+  if(opts.hide||opts.show){ const hide=opts.hide?new RegExp(opts.hide):null, show=opts.show?new RegExp(opts.show):null; root.traverse(o=>{ if(!(o.isMesh||o.isSkinnedMesh))return; if(show&&!show.test(o.name)&&(hide?hide.test(o.name):true))o.visible=false; else if(hide&&hide.test(o.name))o.visible=false; else o.visible=true; }); }
   let mixer=null; if(opts.anim&&animations.length){ mixer=new THREE.AnimationMixer(root); const clip=animations.find(a=>a.name===opts.anim)||animations.find(a=>a.name.toLowerCase().includes(opts.anim.toLowerCase())); if(clip){ const act=mixer.clipAction(clip); act.play(); mixer.setTime(((opts.t||0)%1)*clip.duration); } root.updateMatrixWorld(true); }
   if(opts.texture){ const tex=await new Promise((res,rej)=>new THREE.TextureLoader().load(opts.texture,res,undefined,rej)); tex.colorSpace=THREE.SRGBColorSpace; tex.flipY=opts.flipY!==undefined?opts.flipY:true; root.traverse(o=>{ if(o.isMesh){ const mk=(m)=>{ const n=new THREE.MeshStandardMaterial({map:tex,roughness:0.9,metalness:0}); if(m&&m.skinning!==undefined)n.skinning=m.skinning; return n; }; o.material=Array.isArray(o.material)?o.material.map(mk):mk(o.material); } }); }
   if(opts.tint){ root.traverse(o=>{ if(o.isMesh){ const ms=Array.isArray(o.material)?o.material:[o.material]; const wasArr=Array.isArray(o.material); o.material=ms.map(m=>{ const c=m.clone(); if(c.color){ const hsl={}; c.color.getHSL(hsl); c.color.setHSL((hsl.h+opts.tint.h)%1,Math.max(0,Math.min(1,hsl.s*opts.tint.s)),Math.max(0,Math.min(1,hsl.l*opts.tint.l))); } return c; }); if(!wasArr)o.material=o.material[0]; } }); }
@@ -43,5 +44,6 @@ window.renderModel=async function(url,opts){ opts=opts||{}; const {scene:src,ani
   const p=new THREE.Vector3(0,0,0).project(camera); const ax=(p.x+1)/2*c.width-x0, ay=(1-p.y)/2*c.height-y0; // ground-origin pixel
   const pxPerUnit=c.width/(2*V); // pixels per world unit at scale s  (model units * s)
   return {png:out.toDataURL('image/png'),w,h,ax,ay,native:{x:size.x,y:size.y,z:size.z},scale:s,pxPerUnit,anims:animations.map(a=>a.name)}; };
+window.listNodes=async function(url){ const {scene:s}=await load(url); const out=[]; s.traverse(o=>{ if(o.isMesh||o.isSkinnedMesh)out.push(o.name); }); return out; };
 window.__ready=true;
 </script></body></html>
