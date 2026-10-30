@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Little Worlds</title>
+<meta name="description" content="A god sandbox: paint a world, drop creatures, watch villages and kingdoms rise, and smite them.">
+<style>
+:root{--panel:#141a22;--panel2:#1e2631;--line:#2b3542;--ink:#eef2f6;--muted:#9aa8b8;--accent:#f2c14e;--danger:#e2614a;--good:#6fd08c;--font:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;background:#0b0f14;color:var(--ink);font-family:var(--font);overflow:hidden;overscroll-behavior:none}
+canvas#map{position:fixed;inset:0;width:100vw;height:100vh;touch-action:none;image-rendering:pixelated;image-rendering:crisp-edges}
+#top{position:fixed;left:0;right:0;top:0;z-index:5;display:flex;align-items:flex-start;justify-content:space-between;padding:calc(env(safe-area-inset-top,0px) + 8px) 10px 8px;pointer-events:none;background:linear-gradient(180deg,rgba(11,15,20,.9),rgba(11,15,20,0))}
+#top>*{pointer-events:auto}
+.stats{font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:1px;max-width:55vw}.stats b{color:var(--ink);font-weight:600}.stats .big{font-size:15px;color:var(--ink);font-weight:700}
+.speeds{display:flex;gap:2px;background:rgba(20,26,34,.95);border:1px solid var(--line);border-radius:999px;padding:3px}
+.speeds button{border:0;background:transparent;color:var(--muted);font:600 12px var(--font);padding:5px 9px;border-radius:999px}.speeds button.on{background:var(--accent);color:#1a1405}
+#bottom{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(14,19,25,.97);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:0 0 auto;border:0;background:transparent;color:var(--muted);font:600 11px var(--font);padding:6px 10px;border-radius:8px 8px 0 0;letter-spacing:.03em;text-transform:uppercase}.tabs button.on{background:var(--panel2);color:var(--accent)}
+.tools{display:flex;gap:6px;padding:8px;overflow-x:auto;scrollbar-width:none;background:var(--panel2)}.tools::-webkit-scrollbar{display:none}
+.tool{flex:0 0 auto;width:60px;height:58px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:10px var(--font)}
+.tool canvas{width:28px;height:28px;image-rendering:pixelated}.tool.on{border-color:var(--accent);color:var(--accent);background:#2a2516}
+.opts{display:flex;gap:6px;padding:0 8px 8px;align-items:center;font-size:12px;color:var(--muted);background:var(--panel2)}.opts button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:3px 10px;font-size:12px}.opts button.on{background:var(--accent);color:#1a1405;border-color:var(--accent)}
+#hint{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--barH,150px) + 10px);z-index:6;background:rgba(20,26,34,.95);border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:13px;max-width:92vw;text-align:center}
+#sheet{position:fixed;z-index:7;left:8px;right:8px;bottom:calc(var(--barH,150px) + 8px);max-height:48vh;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,.5);display:flex;flex-direction:column}
+@media(min-width:720px){#sheet{left:auto;width:360px;right:12px}}
+.sh{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}.sh h2{margin:0;font-size:15px;flex:1}.sh .x{border:0;background:transparent;color:var(--muted);font-size:18px;padding:2px 6px}.sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.sb{padding:10px 12px;overflow-y:auto;font-size:13px}.kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px}.kv dt{color:var(--muted)}.kv dd{margin:0}
+.btn{border:1px solid var(--line);background:var(--panel2);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:12px;margin:4px 4px 0 0}.btn.danger{border-color:var(--danger);color:var(--danger)}
+#toasts{position:fixed;z-index:6;right:10px;top:calc(env(safe-area-inset-top,0px) + 58px);display:flex;flex-direction:column;gap:5px;align-items:flex-end;pointer-events:none;max-width:72vw}
+.toast{background:rgba(20,26,34,.95);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:5px 9px;font-size:12px;animation:tin .25s ease-out}.toast.war{border-left-color:var(--danger)}.toast.good{border-left-color:var(--good)}
+@keyframes tin{from{opacity:0;transform:translateY(-4px)}to{opacity:1}}
+#help{position:fixed;inset:0;z-index:20;background:rgba(5,8,12,.8);display:flex;align-items:center;justify-content:center;padding:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;max-width:420px;width:100%}.card h1{margin:0 0 6px;font-size:22px;color:var(--accent)}.card p{margin:8px 0;font-size:14px;line-height:1.45}.card .btn{font-size:14px;padding:9px 16px;background:var(--accent);color:#1a1405;border-color:var(--accent)}
+.laws label{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+</style></head><body>
+<canvas id="map"></canvas>
+<div id="top"><div class="stats"><span class="big" id="stWorld">Little World</span><span><b id="stPop">0</b> creatures · <b id="stVil">0</b> villages</span><span><b id="stKing">0</b> kingdoms · <span id="stYear">Year 0</span></span></div>
+<div class="speeds"><button id="sp0">❚❚</button><button id="sp1" class="on">1×</button><button id="sp2">2×</button><button id="sp3">4×</button><button id="sp4">8×</button></div></div>
+<div id="toasts"></div>
+<div id="hint" hidden></div>
+<div id="sheet" hidden><div class="sh"><span class="sw" id="shSw" hidden></span><h2 id="shTitle"></h2><button class="x" id="shClose">✕</button></div><div class="sb" id="shBody"></div></div>
+<div id="bottom"><div class="tabs" id="tabs"></div><div class="tools" id="tools"></div><div class="opts" id="opts"></div></div>
+<div id="help"><div class="card"><h1>Little Worlds</h1><p>A world in your hands. Paint land and sea, plant forests, and drop <b>humans, elves, orcs and dwarves</b>. They will hunt, cut wood, build houses one at a time, found villages, crown kings and go to war, all on their own.</p><p>Then do what gods do: lightning, fire, meteors, plague, blessing, rain. Tap any creature, village or kingdom to see who they are.</p><div><button class="btn" id="helpClose">Begin</button> <button class="btn" id="newWorld" style="background:transparent;color:var(--muted);border-color:var(--line)">New world</button></div></div></div>
+<script>
+'use strict';
+// ---------- world ----------
+const W=220,H=130,TS=10; // tiles and base pixels per tile
+const T={DEEP:0,SEA:1,SAND:2,GRASS:3,MOUNT:4,ASH:5,LAVA:6};
+const O={NONE:0,TREE:1,BUSH:2,HOUSE:3,HALL:4,FARM:5,SITE:6,SAPLING:7,ROCK:8,WALL:9,DOCK:10};
+const RACES={human:{name:'Humans',skin:'#e8b88a',hair:'#5a3a22',cloth:'#4a74b8',roof:'#b5533c',wall:'#d9c7a3',born:'plains',speed:1,hp:12,atk:3},
+  elf:{name:'Elves',skin:'#f1dcc0',hair:'#e8d08a',cloth:'#4f9a4b',roof:'#3b7a4a',wall:'#c9d8b0',born:'forest',speed:1.15,hp:10,atk:3},
+  orc:{name:'Orcs',skin:'#6f9a4a',hair:'#2a2a22',cloth:'#8a3a2a',roof:'#5a4030',wall:'#8a7a60',born:'rough',speed:0.95,hp:16,atk:4},
+  dwarf:{name:'Dwarves',skin:'#e0b090',hair:'#c0552a',cloth:'#7a6a3a',roof:'#6a6a70',wall:'#a7a09a',born:'mountain',speed:0.85,hp:14,atk:4}};
+const ANIMALS={sheep:{hp:6,speed:0.5,food:3},wolf:{hp:10,speed:1.2,atk:3}};
+let world=null, units=[], villages=[], kingdoms=[], particles=[], effects=[], nextId=1;
+let rngState=12345; function rng(){ rngState=(rngState*1664525+1013904223)>>>0; return rngState/4294967296; }
+function hash(i){ i=(i^61)^(i>>>16); i=i+(i<<3); i=i^(i>>>4); i=Math.imul(i,0x27d4eb2d); i=i^(i>>>15); return (i>>>0)/4294967296; }
+function idx(x,y){ return y*W+x; }
+function inb(x,y){ return x>=0&&y>=0&&x<W&&y<H; }
+// value noise
+let NZ=null; function nz(x,y){ if(!NZ){ NZ=new Float32Array(256*256); for(let i=0;i<NZ.length;i++)NZ[i]=hash(i*7+3); } const xi=Math.floor(x),yi=Math.floor(y),fx=x-xi,fy=y-yi; const s=(a,b)=>NZ[((b&255)<<8)|(a&255)]; const u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy); return (s(xi,yi)*(1-u)+s(xi+1,yi)*u)*(1-v)+(s(xi,yi+1)*(1-u)+s(xi+1,yi+1)*u)*v; }
+function fbm(x,y,o){ let a=0,amp=0.5,f=1,n=0; for(let i=0;i<(o||4);i++){ a+=nz(x*f,y*f)*amp; n+=amp; amp*=0.5; f*=2; } return a/n; }
+function newWorld(seed,blank){ rngState=seed|0; const N=W*H; world={seed,tick:0,terrain:new Uint8Array(N),obj:new Uint8Array(N),objT:new Uint16Array(N),fire:new Uint8Array(N),owner:new Int16Array(N).fill(-1),burn:new Uint8Array(N),wet:new Uint8Array(N),laws:{disasters:true,wars:true,growth:true,animals:true},name:worldName(seed)};
+  const ox=rng()*500, oy=rng()*500; for(let y=0;y<H;y++)for(let x=0;x<W;x++){ const i=idx(x,y); let h=blank?0.2:fbm(ox+x*0.045,oy+y*0.045,5); const ex=Math.min(x,W-1-x)/W*2, ey=Math.min(y,H-1-y)/H*2; h-=Math.pow(1-Math.min(1,Math.min(ex,ey)*2.2),2)*0.35; const t=h<0.42?(h<0.33?T.DEEP:T.SEA):h<0.46?T.SAND:h<0.74?T.GRASS:T.MOUNT; world.terrain[i]=t;
+    if(t===T.GRASS){ const f=fbm(ox+x*0.11+70,oy+y*0.11+30,3); if(f>0.56&&rng()<0.85)world.obj[i]=O.TREE; else if(rng()<0.03)world.obj[i]=O.BUSH; else if(rng()<0.01)world.obj[i]=O.ROCK; } }
+  units=[]; villages=[]; kingdoms=[]; particles=[]; effects=[]; nextId=1; if(!blank)for(let k=0;k<14;k++){ const p=randLand(); if(p)spawnAnimal(rng()<0.8?'sheep':'wolf',p[0]+0.5,p[1]+0.5); } markAllDirty(); }
+function randLand(){ for(let t=0;t<200;t++){ const x=Math.floor(rng()*W),y=Math.floor(rng()*H); const i=idx(x,y); if(world.terrain[i]===T.GRASS&&!world.obj[i])return [x,y]; } return null; }
+const SYL=['ka','ra','mo','vel','dun','tor','ish','an','el','or','gar','ba','lin','thu','ny','os','mir','ald','wen','kor','sa','ti','ul','bre','fen','hol','ska','ven','zor','ith'];
+function nameGen(n,cap){ let s=''; for(let i=0;i<n;i++)s+=SYL[Math.floor(rng()*SYL.length)]; return cap?s[0].toUpperCase()+s.slice(1):s; }
+function worldName(seed){ const r=rngState; rngState=seed*31+7; const n=nameGen(2,true); rngState=r; return n; }
+const KSUF=['dom','ia','land','mark','heim','gard','stan','ria'];
+// ---------- creatures ----------
+function spawnUnit(race,x,y,village){ const R=RACES[race]; const u={id:nextId++,kind:'person',race,x,y,hp:R.hp,maxhp:R.hp,atk:R.atk,hunger:0,age:0,name:nameGen(2,true),village:village===undefined?-1:village,job:'idle',state:'idle',tx:x,ty:y,t:0,dir:1,carry:null,soldier:false,sick:0,blessed:0,cursed:0,ph:rng()*6.28,kills:0}; units.push(u); return u; }
+function spawnAnimal(kind,x,y){ const A=ANIMALS[kind]; const u={id:nextId++,kind,race:kind,x,y,hp:A.hp,maxhp:A.hp,atk:A.atk||0,hunger:0,age:0,name:kind,village:-1,job:'wild',state:'idle',tx:x,ty:y,t:0,dir:1,ph:rng()*6.28,sick:0,blessed:0,cursed:0}; units.push(u); return u; }
+function walkable(x,y){ if(!inb(x,y))return false; const i=idx(x,y); const t=world.terrain[i]; if(t<=T.SEA||t===T.LAVA)return false; if(t===T.MOUNT)return false; const o=world.obj[i]; return o!==O.HOUSE&&o!==O.HALL&&o!==O.ROCK&&o!==O.WALL; }
+function findTile(x0,y0,r,pred){ let best=null,bd=1e9; for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const x=x0+dx,y=y0+dy; if(!inb(x,y))continue; const d=dx*dx+dy*dy; if(d>r*r||d>=bd)continue; if(pred(idx(x,y),x,y)){ best=[x,y]; bd=d; } } return best; }
+function villageAt(i){ const o=world.owner[i]; return o>=0?villages[o]:null; }
+function nearestUnit(u,r,pred){ let best=null,bd=r*r; for(const v of units){ if(v===u||v.dead)continue; const d=(v.x-u.x)**2+(v.y-u.y)**2; if(d<bd&&pred(v)){ best=v; bd=d; } } return best; }
+function hurt(u,dmg,by){ if(u.blessed>0)dmg*=0.5; u.hp-=dmg; puff(u.x,u.y,'#c0392b',3); if(u.hp<=0){ u.dead=true; if(by&&by.kind==='person'){ by.kills++; } if(u.kind==='sheep'&&by&&by.village>=0){ villages[by.village].food+=ANIMALS.sheep.food; } } }
+function moveToward(u,tx,ty,spd){ const dx=tx-u.x, dy=ty-u.y; const d=Math.hypot(dx,dy); if(d<0.05)return true; const st=Math.min(d,spd); const nx=u.x+dx/d*st, ny=u.y+dy/d*st; if(walkable(Math.floor(nx),Math.floor(ny))){ u.x=nx; u.y=ny; } else { // slide around
+    if(walkable(Math.floor(nx),Math.floor(u.y)))u.x=nx; else if(walkable(Math.floor(u.x),Math.floor(ny)))u.y=ny; else { u.stuck=(u.stuck||0)+1; if(u.stuck>20){ u.state='idle'; u.stuck=0; } } }
+  u.dir=dx>=0?1:-1; u.moving=true; return false; }
+function wander(u){ for(let t=0;t<6;t++){ const x=Math.floor(u.x)+Math.floor(rng()*5)-2, y=Math.floor(u.y)+Math.floor(rng()*5)-2; if(walkable(x,y)){ u.tx=x+0.5; u.ty=y+0.5; u.state='walk'; u.after='idle'; return; } } u.t=20; }
+// ---------- villages and kingdoms ----------
+const VNAMES=['brook','ford','holm','ton','wick','by','dale','mere','stead','burg','haven','moor'];
+function foundVillage(u){ const x=Math.floor(u.x),y=Math.floor(u.y); const i=idx(x,y); if(world.terrain[i]!==T.GRASS&&world.terrain[i]!==T.SAND)return null; if(world.obj[i]&&world.obj[i]!==O.TREE&&world.obj[i]!==O.BUSH)return null; for(const v of villages){ if(!v.dead&&Math.hypot(v.x-x,v.y-y)<9)return null; }
+  const v={id:villages.length,x,y,race:u.race,name:nameGen(1,true)+VNAMES[Math.floor(rng()*VNAMES.length)],food:6,wood:4,houses:0,kingdom:-1,founded:world.tick,dead:false,sites:[],r:2,level:0,tiles:[]}; villages.push(v); world.obj[i]=O.HALL; world.objT[i]=v.id; claim(v,3);
+  // kingdom: join a same-race kingdom whose village is near, else found one
+  let K=null; for(const o of villages){ if(o.dead||o===v||o.race!==v.race||o.kingdom<0)continue; if(Math.hypot(o.x-x,o.y-y)<26){ K=kingdoms[o.kingdom]; break; } }
+  if(!K){ K={id:kingdoms.length,name:nameGen(2,true)+KSUF[Math.floor(rng()*KSUF.length)],race:v.race,color:kingColor(kingdoms.length),capital:v.id,king:u.id,founded:world.tick,wars:new Set(),rel:new Map(),dead:false,prestige:0}; kingdoms.push(K); u.king=true; toast(`${u.name} founds ${K.name}`,'good'); }
+  v.kingdom=K.id; for(const w of units){ if(!w.dead&&w.kind==='person'&&w.village<0&&w.race===u.race&&Math.hypot(w.x-x,w.y-y)<7)w.village=v.id; } paintOwner(v); return v; }
+function kingColor(i){ const C=[[214,64,52],[52,120,220],[60,170,80],[230,170,40],[150,70,200],[40,180,190],[220,100,160],[160,120,60],[90,90,200],[200,200,60]]; return C[i%C.length]; }
+function claim(v,r){ v.r=r; }
+function paintOwner(v){ const r=v.r; for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const x=v.x+dx,y=v.y+dy; if(!inb(x,y)||dx*dx+dy*dy>r*r+1)continue; const i=idx(x,y); if(world.terrain[i]<=T.SEA)continue; const o=world.owner[i]; if(o<0||o===v.id||villages[o].dead||Math.hypot(villages[o].x-x,villages[o].y-y)>Math.hypot(dx,dy)){ world.owner[i]=v.id; } } markAllDirty(); }
+function villagePop(v){ let n=0; for(const u of units)if(!u.dead&&u.village===v.id)n++; return n; }
+function tickVillage(v){ if(v.dead)return; const pop=villagePop(v); if(pop===0){ if(world.tick-(v.emptyT||(v.emptyT=world.tick))>600){ killVillage(v,'abandoned'); } return; } v.emptyT=0; v.pop=pop;
+  // grow: a new house when there is wood and people to fill it
+  if(world.laws.growth&&v.sites.length===0&&v.wood>=3&&pop>=v.houses*2+1&&world.tick%10===0){ const p=findTile(v.x,v.y,v.r+1,(i,x,y)=>world.terrain[i]===T.GRASS&&!world.obj[i]&&world.owner[i]===v.id&&!(x===v.x&&y===v.y)&&!nearObj(x,y,O.HOUSE,0)&&!nearObj(x,y,O.HALL,0)); if(p){ const i=idx(p[0],p[1]); world.obj[i]=O.SITE; world.objT[i]=0; v.sites.push(i); v.wood-=3; markDirty(p[0],p[1]); } }
+  if(world.laws.growth&&v.wood>=2&&world.tick%40===0&&pop>=3){ const nf=countObj(v,O.FARM); if(nf<Math.ceil(pop/3)){ const p=findTile(v.x,v.y,v.r,(i,x,y)=>world.terrain[i]===T.GRASS&&!world.obj[i]&&world.owner[i]===v.id&&Math.hypot(x-v.x,y-v.y)>1.5); if(p){ const i=idx(p[0],p[1]); world.obj[i]=O.FARM; world.objT[i]=0; v.wood-=2; markDirty(p[0],p[1]); } } }
+  // babies
+  if(world.laws.growth&&v.food>=3&&pop<v.houses*3+3&&world.tick%30===(v.id%30)&&rng()<0.85){ v.food-=3; const b=spawnUnit(v.race,v.x+0.5+(rng()-0.5),v.y+1.2,v.id); b.age=0; b.hp=4; puff(b.x,b.y,'#fff',3); }
+  // territory grows with houses
+  const wantR=2+Math.floor(Math.sqrt(v.houses+1)*1.6); if(wantR>v.r){ v.r=wantR; paintOwner(v); }
+  v.level=v.houses>=12?2:v.houses>=5?1:0; }
+function nearObj(x,y,o,r){ for(let dy=-r-1;dy<=r+1;dy++)for(let dx=-r-1;dx<=r+1;dx++){ const xx=x+dx,yy=y+dy; if(inb(xx,yy)&&world.obj[idx(xx,yy)]===o&&(dx||dy))return true; } return false; }
+function countObj(v,o){ let n=0; const r=v.r; for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const x=v.x+dx,y=v.y+dy; if(inb(x,y)&&world.owner[idx(x,y)]===v.id&&world.obj[idx(x,y)]===o)n++; } return n; }
+function killVillage(v,why){ v.dead=true; for(let i=0;i<W*H;i++){ if(world.owner[i]===v.id){ world.owner[i]=-1; if(world.obj[i]===O.HALL||world.obj[i]===O.SITE)world.obj[i]=O.NONE; } } for(const u of units)if(u.village===v.id)u.village=-1; const K=kingdoms[v.kingdom]; if(K){ if(!villages.some(o=>!o.dead&&o.kingdom===K.id)){ K.dead=true; toast(`${K.name} is no more`,'war'); } else if(K.capital===v.id){ K.capital=villages.find(o=>!o.dead&&o.kingdom===K.id).id; } } markAllDirty(); toast(`${v.name} is ${why}`,'war'); }
+function captureVillage(v,K){ const old=kingdoms[v.kingdom]; v.kingdom=K.id; if(old&&!villages.some(o=>!o.dead&&o.kingdom===old.id)){ old.dead=true; toast(`${old.name} falls to ${K.name}`,'war'); } else toast(`${K.name} takes ${v.name}`,'war'); for(const u of units){ if(!u.dead&&u.village===v.id&&!u.soldier)u.race=u.race; } K.prestige++; markAllDirty(); }
+function tickKingdoms(){ for(const K of kingdoms){ if(K.dead)continue; const vs=villages.filter(v=>!v.dead&&v.kingdom===K.id); if(!vs.length){ K.dead=true; continue; } const king=units.find(u=>u.id===K.king&&!u.dead); if(!king){ const cand=units.filter(u=>!u.dead&&u.kind==='person'&&u.village>=0&&villages[u.village].kingdom===K.id).sort((a,b)=>b.age-a.age)[0]; if(cand){ K.king=cand.id; cand.king=true; toast(`${cand.name} is crowned in ${K.name}`); } }
+    if(!world.laws.wars)continue;
+    for(const L of kingdoms){ if(L===K||L.dead)continue; let r=K.rel.get(L.id); if(r===undefined){ r=(K.race===L.race?0.3:-0.2)+(rng()-0.5)*0.4; K.rel.set(L.id,r); } r+=(rng()-0.5)*0.02; const close=vs.some(v=>villages.some(o=>!o.dead&&o.kingdom===L.id&&Math.hypot(o.x-v.x,o.y-v.y)<30)); if(close)r-=0.004*(K.race===L.race?0.5:1); K.rel.set(L.id,Math.max(-1,Math.min(1,r)));
+      if(!K.wars.has(L.id)&&close&&r<-0.45&&rng()<0.02){ K.wars.add(L.id); L.wars.add(K.id); K.warT=L.warT=world.tick; toast(`${K.name} declares war on ${L.name}`,'war'); }
+      if(K.wars.has(L.id)&&world.tick-Math.max(K.warT||0,L.warT||0)>900&&rng()<0.01){ K.wars.delete(L.id); L.wars.delete(K.id); K.rel.set(L.id,0.1); L.rel.set(K.id,0.1); toast(`${K.name} and ${L.name} make peace`,'good'); } } } }
+// ---------- a creature's day ----------
+function tickUnit(u,dt){ u.moving=false; u.age+=dt/60; u.hunger+=dt*(u.kind==='person'?0.012:0.006); if(u.sick>0){ u.sick-=dt; if(rng()<0.0015*dt)hurt(u,1); if(u.sick<=0)u.sick=0; } if(u.blessed>0)u.blessed-=dt; if(u.cursed>0){ u.cursed-=dt; if(rng()<0.002*dt)hurt(u,1); } const i=idx(Math.floor(u.x),Math.floor(u.y)); if(world.fire[i]){ hurt(u,2*dt); if(u.state!=='flee'){ u.state='flee'; const p=findTile(Math.floor(u.x),Math.floor(u.y),4,(j,x,y)=>!world.fire[j]&&walkable(x,y)); if(p){ u.tx=p[0]+0.5; u.ty=p[1]+0.5; } } }
+  if(world.terrain[i]<=T.SEA){ hurt(u,1*dt); }
+  if(u.hunger>8){ hurt(u,0.4*dt); if(u.dead)return; }
+  if(u.hp<u.maxhp&&u.hunger<4&&rng()<0.02*dt)u.hp=Math.min(u.maxhp,u.hp+1);
+  const R=RACES[u.race]||ANIMALS[u.kind]; const spd=(R.speed||1)*dt*2.2*(u.carry?0.8:1)*(u.state==='flee'?1.5:1);
+  if(u.kind==='sheep'){ if(u.state==='walk'){ if(moveToward(u,u.tx,u.ty,spd*0.6)){ u.state='idle'; u.t=60+rng()*120; } } else { u.t-=dt; if(u.t<=0)wander(u); if(u.hunger>3&&world.terrain[i]===T.GRASS)u.hunger=0; if(world.laws.animals&&u.age>2&&rng()<0.0006*dt&&units.filter(a=>a.kind==='sheep').length<120)spawnAnimal('sheep',u.x,u.y); } return; }
+  if(u.kind==='wolf'){ if(u.hunger>3){ const prey=nearestUnit(u,10,v=>v.kind==='sheep'||(v.kind==='person'&&!v.soldier)); if(prey){ if(moveToward(u,prey.x,prey.y,spd)){ hurt(prey,u.atk,u); if(prey.dead)u.hunger=0; } return; } } if(u.state==='walk'){ if(moveToward(u,u.tx,u.ty,spd*0.7)){ u.state='idle'; u.t=40+rng()*80; } } else { u.t-=dt; if(u.t<=0)wander(u); } return; }
+  // people
+  const v=u.village>=0?villages[u.village]:null; if(v&&v.dead)u.village=-1;
+  if(u.state==='flee'){ if(moveToward(u,u.tx,u.ty,spd)||rng()<0.02)u.state='idle'; return; }
+  // fighting: soldiers seek enemies, everyone defends against adjacent attackers
+  const K=v&&v.kingdom>=0?kingdoms[v.kingdom]:null;
+  if(K&&K.wars.size&&!u.soldier&&world.tick%30===u.id%30){ const soldiers=units.filter(a=>!a.dead&&a.village===u.village&&a.soldier).length; const pop=villagePop(v); if(soldiers<Math.max(1,Math.floor(pop*0.35))&&u.age>2){ u.soldier=true; u.maxhp+=4; u.hp+=4; u.atk+=2; u.carry=null; } }
+  if(u.soldier&&K&&!K.wars.size&&rng()<0.01){ u.soldier=false; u.maxhp-=4; u.hp=Math.min(u.hp,u.maxhp); u.atk-=2; }
+  const enemy=K?nearestUnit(u,u.soldier?14:3,a=>a.kind==='person'&&a.village>=0&&villages[a.village].kingdom>=0&&K.wars.has(villages[a.village].kingdom)):nearestUnit(u,2,a=>a.kind==='wolf');
+  if(enemy){ if(moveToward(u,enemy.x,enemy.y,spd*1.1)||Math.hypot(enemy.x-u.x,enemy.y-u.y)<0.7){ if((u.cd||0)<=0){ hurt(enemy,u.atk+(rng()<0.2?2:0),u); u.cd=0.7; slash(u.x,u.y,u.dir); } } u.cd=(u.cd||0)-dt; u.state='fight'; return; }
+  if(u.soldier&&K&&K.wars.size){ // march on the nearest enemy village
+    if(u.state!=='march'||rng()<0.005){ let tgt=null,bd=1e9; for(const o of villages){ if(o.dead||o.kingdom<0||!K.wars.has(o.kingdom))continue; const d=Math.hypot(o.x-u.x,o.y-u.y); if(d<bd){ bd=d; tgt=o; } } if(tgt){ u.tx=tgt.x+0.5+(rng()-0.5); u.ty=tgt.y+1.5; u.state='march'; u.target=tgt.id; } }
+    if(u.state==='march'){ if(moveToward(u,u.tx,u.ty,spd)){ const o=villages[u.target]; if(o&&!o.dead&&K.wars.has(o.kingdom)){ const defenders=units.filter(a=>!a.dead&&a.village===o.id&&a.kind==='person').length; const attackers=units.filter(a=>!a.dead&&a.soldier&&a.village>=0&&villages[a.village].kingdom===K.id&&Math.hypot(a.x-o.x,a.y-o.y)<4).length; if(attackers>defenders){ captureVillage(o,K); } } u.state='idle'; u.t=30; } return; } }
+  if(u.state==='walk'){ if(moveToward(u,u.tx,u.ty,spd)){ u.state=u.after||'idle'; u.t=u.workT||0; } return; }
+  if(u.state==='work'){ u.t-=dt; if(u.t<=0){ finishWork(u,v); } return; }
+  if(u.state==='idle'){ u.t-=dt; if(u.t>0)return; chooseJob(u,v); } }
+function chooseJob(u,v){ const x=Math.floor(u.x),y=Math.floor(u.y);
+  if(u.carry&&v){ u.tx=v.x+0.5; u.ty=v.y+1.3; u.state='walk'; u.after='work'; u.workT=0.3; u.job='deliver'; return; }
+  if(u.hunger>5){ if(v&&v.food>=1){ v.food-=1; u.hunger=0; u.t=10; return; } const b=findTile(x,y,8,(i)=>world.obj[i]===O.BUSH); if(b){ u.tx=b[0]+0.5; u.ty=b[1]+0.5; u.state='walk'; u.after='work'; u.workT=1.5; u.job='forage'; return; } const sheep=nearestUnit(u,10,a=>a.kind==='sheep'); if(sheep){ u.tx=sheep.x; u.ty=sheep.y; u.state='walk'; u.after='work'; u.workT=0.4; u.job='hunt'; u.prey=sheep; return; } }
+  if(!v){ // settle: found a village with a few others around, or wander
+    const n=units.filter(a=>!a.dead&&a.kind==='person'&&a.race===u.race&&a.village<0&&Math.hypot(a.x-u.x,a.y-u.y)<5).length; if(n>=3&&rng()<0.2&&world.terrain[idx(x,y)]===T.GRASS){ const nv=foundVillage(u); if(nv){ u.village=nv.id; u.t=10; return; } } wander(u); u.t=10+rng()*30; return; }
+  const r=rng(); const site=v.sites.length?v.sites[0]:-1;
+  if(site>=0&&v.wood>=1&&r<0.45){ const sx=site%W, sy=(site-sx)/W; u.tx=sx+0.5+(rng()<0.5?-0.7:0.7); u.ty=sy+1.1; u.state='walk'; u.after='work'; u.workT=2.5; u.job='build'; u.site=site; return; }
+  if(v.wood<10&&r<0.75){ const t=findTile(v.x,v.y,v.r+4,(i)=>world.obj[i]===O.TREE&&!units.some(a=>a.job==='chop'&&a.tree===i)); if(t){ u.tx=t[0]+0.5-0.5*u.dir; u.ty=t[1]+0.9; u.state='walk'; u.after='work'; u.workT=2.5; u.job='chop'; u.tree=idx(t[0],t[1]); return; } }
+  if(r<0.92){ const f=findTile(v.x,v.y,v.r,(i)=>world.obj[i]===O.FARM&&world.objT[i]<30&&!units.some(a=>a.job==='farm'&&a.farm===i)); if(f){ u.tx=f[0]+0.5; u.ty=f[1]+0.9; u.state='walk'; u.after='work'; u.workT=3; u.job='farm'; u.farm=idx(f[0],f[1]); return; } const sh=findTile(v.x,v.y,v.r+2,(i,xx,yy)=>world.terrain[i]===T.SAND&&[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>inb(xx+dx,yy+dy)&&world.terrain[idx(xx+dx,yy+dy)]<=T.SEA)); if(sh&&rng()<0.5){ u.tx=sh[0]+0.5; u.ty=sh[1]+0.5; u.state='walk'; u.after='work'; u.workT=4+rng()*3; u.job='fish'; return; } }
+  wander(u); u.t=5+rng()*15; u.job='idle'; }
+function finishWork(u,v){ const j=u.job; u.state='idle'; u.t=3+rng()*6;
+  if(j==='chop'){ const i=u.tree; if(world.obj[i]===O.TREE){ world.obj[i]=O.SAPLING; world.objT[i]=0; const x=i%W,y=(i-x)/W; markDirty(x,y); puff(x+0.5,y+0.5,'#6b4b2a',6); u.carry='wood'; } }
+  else if(j==='deliver'){ if(v){ if(u.carry==='wood')v.wood++; else if(u.carry==='food')v.food+=3; } u.carry=null; }
+  else if(j==='forage'){ u.hunger=0; }
+  else if(j==='hunt'){ const p=u.prey; if(p&&!p.dead&&Math.hypot(p.x-u.x,p.y-u.y)<1.2){ hurt(p,u.atk+3,u); if(p.dead){ u.hunger=0; u.carry='food'; } } u.prey=null; }
+  else if(j==='fish'){ if(rng()<0.6){ u.carry='food'; u.hunger=Math.max(0,u.hunger-2); } }
+  else if(j==='farm'){ const i=u.farm; if(world.obj[i]===O.FARM){ world.objT[i]=Math.min(40,world.objT[i]+20); if(world.objT[i]>=40){ world.objT[i]=0; u.carry='food'; } markDirty(i%W,(i-i%W)/W); } }
+  else if(j==='build'){ const i=u.site; if(world.obj[i]===O.SITE&&v){ world.objT[i]+=1; const x=i%W,y=(i-x)/W; puff(x+0.5,y+0.5,'#d8d0c0',3); if(world.objT[i]>=2){ world.obj[i]=O.HOUSE; world.objT[i]=v.id; v.houses++; v.sites=v.sites.filter(s=>s!==i); } markDirty(x,y); } } }
+// ---------- fire, growth, weather ----------
+function flammable(i){ const o=world.obj[i]; return o===O.TREE||o===O.HOUSE||o===O.FARM||o===O.HALL||o===O.SITE||o===O.BUSH||o===O.SAPLING||(world.terrain[i]===T.GRASS&&rng()<0.3); }
+function ignite(i){ if(world.fire[i]||world.terrain[i]<=T.SEA||world.wet[i])return; if(!flammable(i))return; world.fire[i]=20+Math.floor(rng()*15); }
+function tickWorld(){ const Wd=world; Wd.tick++;
+  if(Wd.tick%2===0){ for(let i=0;i<W*H;i++){ if(!Wd.fire[i])continue; Wd.fire[i]--; const x=i%W,y=(i-x)/W; if(rng()<0.25){ const d=[[1,0],[-1,0],[0,1],[0,-1]][Math.floor(rng()*4)]; if(inb(x+d[0],y+d[1]))ignite(idx(x+d[0],y+d[1])); } if(rng()<0.3)particles.push({x:x+rng(),y:y+rng(),vx:(rng()-0.5)*0.4,vy:-1-rng(),life:0.8+rng()*0.6,c:rng()<0.5?'#ff9a3c':'#ffd36e',s:2}); if(rng()<0.15)particles.push({x:x+rng(),y:y+0.2,vx:(rng()-0.5)*0.3,vy:-0.8,life:1.5,c:'rgba(80,80,80,.6)',s:3});
+      if(Wd.fire[i]===0){ const o=Wd.obj[i]; if(o===O.HOUSE){ const v=villages[Wd.objT[i]]; if(v&&!v.dead)v.houses=Math.max(0,v.houses-1); } if(o===O.HALL){ const v=villages[Wd.objT[i]]; if(v&&!v.dead)killVillage(v,'burned to the ground'); } if(o===O.SITE){ const v=villages[Wd.objT[i]]; } Wd.obj[i]=O.NONE; if(Wd.terrain[i]===T.GRASS)Wd.terrain[i]=T.ASH; Wd.burn[i]=200; markDirty(x,y); } else markDirty(x,y); } }
+  if(Wd.tick%40===0){ for(let k=0;k<400;k++){ const i=Math.floor(rng()*W*H); const x=i%W,y=(i-x)/W; if(Wd.terrain[i]===T.ASH&&Wd.burn[i]>0){ Wd.burn[i]-=40; if(Wd.burn[i]<=0){ Wd.terrain[i]=T.GRASS; markDirty(x,y); } } else if(Wd.obj[i]===O.SAPLING){ Wd.objT[i]++; if(Wd.objT[i]>12){ Wd.obj[i]=O.TREE; markDirty(x,y); } } else if(Wd.terrain[i]===T.GRASS&&!Wd.obj[i]&&Wd.owner[i]<0&&rng()<0.06&&nearObj(x,y,O.TREE,0)){ Wd.obj[i]=O.SAPLING; Wd.objT[i]=0; markDirty(x,y); } else if(Wd.obj[i]===O.FARM&&Wd.objT[i]<40){ Wd.objT[i]+=2; if(Wd.objT[i]%10<2)markDirty(x,y); } if(Wd.wet[i]){ Wd.wet[i]--; } } }
+  if(Wd.laws.disasters&&Wd.tick%300===150&&rng()<0.25){ const p=randLand(); if(p){ const u=units.find(a=>!a.dead&&a.kind==='person'); doPower('lightning',p[0]+0.5,p[1]+0.5,true); } }
+  for(const v of villages)tickVillage(v); if(Wd.tick%10===0)tickKingdoms();
+  // plague spreads
+  if(Wd.tick%5===0)for(const u of units){ if(u.dead||!u.sick)continue; for(const o of units){ if(o.dead||o.sick||o.kind!==u.kind||o.blessed>0)continue; if(Math.abs(o.x-u.x)<1.5&&Math.abs(o.y-u.y)<1.5&&rng()<0.08){ o.sick=300; } } }
+  // age
+  if(Wd.tick%120===0)for(const u of units){ if(!u.dead&&u.kind==='person'&&u.age>70&&rng()<0.1){ u.dead=true; } } }
+// ---------- powers ----------
+const POWERS={
+  inspect:{cat:'Tools',name:'Inspect',icon:'eye'},
+  land:{cat:'Terrain',name:'Land',icon:'grass',brush:true},sea:{cat:'Terrain',name:'Sea',icon:'sea',brush:true},mount:{cat:'Terrain',name:'Mountain',icon:'mount',brush:true},sand:{cat:'Terrain',name:'Sand',icon:'sand',brush:true},forest:{cat:'Terrain',name:'Forest',icon:'tree',brush:true},clear:{cat:'Terrain',name:'Clear',icon:'clear',brush:true},
+  human:{cat:'Creatures',name:'Human',icon:'human'},elf:{cat:'Creatures',name:'Elf',icon:'elf'},orc:{cat:'Creatures',name:'Orc',icon:'orc'},dwarf:{cat:'Creatures',name:'Dwarf',icon:'dwarf'},sheep:{cat:'Creatures',name:'Sheep',icon:'sheep'},wolf:{cat:'Creatures',name:'Wolf',icon:'wolf'},
+  bless:{cat:'Nature',name:'Bless',icon:'bless'},heal:{cat:'Nature',name:'Heal',icon:'heal'},rain:{cat:'Nature',name:'Rain',icon:'rain'},grow:{cat:'Nature',name:'Fertility',icon:'grow'},
+  lightning:{cat:'Destruction',name:'Lightning',icon:'bolt'},fire:{cat:'Destruction',name:'Fire',icon:'fire'},meteor:{cat:'Destruction',name:'Meteor',icon:'meteor'},bomb:{cat:'Destruction',name:'Bomb',icon:'bomb'},plague:{cat:'Destruction',name:'Plague',icon:'plague'},curse:{cat:'Destruction',name:'Curse',icon:'curse'},tornado:{cat:'Destruction',name:'Tornado',icon:'tornado'},
+  war:{cat:'Kingdoms',name:'Declare war',icon:'war'},peace:{cat:'Kingdoms',name:'Make peace',icon:'peace'},laws:{cat:'Kingdoms',name:'World laws',icon:'laws'}};
+let brush=1;
+function paint(x0,y0,fn){ const r=brush; for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ if(dx*dx+dy*dy>r*r+0.5)continue; const x=x0+dx,y=y0+dy; if(!inb(x,y))continue; fn(idx(x,y),x,y); markDirty(x,y); } }
+function unitsNear(x,y,r){ return units.filter(u=>!u.dead&&Math.hypot(u.x-x,u.y-y)<=r); }
+function doPower(p,fx,fy,auto){ const x=Math.floor(fx),y=Math.floor(fy); if(!inb(x,y))return; const i=idx(x,y);
+  switch(p){
+    case 'land': paint(x,y,(j)=>{ if(world.terrain[j]<=T.SEA||world.terrain[j]===T.MOUNT||world.terrain[j]===T.LAVA){ world.terrain[j]=T.GRASS; world.obj[j]=O.NONE; } }); break;
+    case 'sea': paint(x,y,(j)=>{ world.terrain[j]=T.SEA; world.obj[j]=O.NONE; world.fire[j]=0; if(world.owner[j]>=0){ const v=villages[world.owner[j]]; if(v&&!v.dead&&idx(v.x,v.y)===j)killVillage(v,'drowned'); } }); break;
+    case 'mount': paint(x,y,(j)=>{ if(world.terrain[j]>T.SEA){ world.terrain[j]=T.MOUNT; world.obj[j]=O.NONE; } }); break;
+    case 'sand': paint(x,y,(j)=>{ if(world.terrain[j]!==T.MOUNT){ world.terrain[j]=T.SAND; world.obj[j]=O.NONE; } }); break;
+    case 'forest': paint(x,y,(j)=>{ if(world.terrain[j]===T.GRASS&&!world.obj[j]&&rng()<0.8)world.obj[j]=O.TREE; }); break;
+    case 'clear': paint(x,y,(j)=>{ if(world.obj[j]===O.TREE||world.obj[j]===O.BUSH||world.obj[j]===O.ROCK||world.obj[j]===O.SAPLING)world.obj[j]=O.NONE; }); break;
+    case 'human': case 'elf': case 'orc': case 'dwarf': if(walkable(x,y)){ const u=spawnUnit(p,fx,fy); puff(fx,fy,'#fff',4); } else hint('Drop creatures on dry land'); break;
+    case 'sheep': case 'wolf': if(walkable(x,y))spawnAnimal(p,fx,fy); break;
+    case 'bless': for(const u of unitsNear(fx,fy,3)){ u.blessed=600; u.hp=u.maxhp; u.cursed=0; } effects.push({x:fx,y:fy,r:3,t:0,dur:0.8,c:'rgba(255,230,120,.8)'}); break;
+    case 'heal': for(const u of unitsNear(fx,fy,3)){ u.hp=u.maxhp; u.sick=0; u.hunger=0; } effects.push({x:fx,y:fy,r:3,t:0,dur:0.6,c:'rgba(120,255,160,.8)'}); break;
+    case 'rain': effects.push({x:fx,y:fy,r:5,t:0,dur:8,rain:true}); break;
+    case 'grow': paint(x,y,(j)=>{ if(world.terrain[j]===T.ASH)world.terrain[j]=T.GRASS; if(world.terrain[j]===T.GRASS&&!world.obj[j]&&rng()<0.12)world.obj[j]=O.BUSH; if(world.obj[j]===O.FARM)world.objT[j]=40; if(world.obj[j]===O.SAPLING)world.obj[j]=O.TREE; }); break;
+    case 'lightning': effects.push({x:fx,y:fy,bolt:true,t:0,dur:0.35}); for(const u of unitsNear(fx,fy,1.2))hurt(u,30); ignite(i); shake=0.3; break;
+    case 'fire': ignite(i); if(!world.fire[i]){ world.fire[i]=20; } break;
+    case 'meteor': effects.push({x:fx,y:fy,meteor:true,t:0,dur:1.1}); break;
+    case 'bomb': explode(fx,fy,3,25); break;
+    case 'plague': for(const u of unitsNear(fx,fy,2.5)){ if(u.kind==='person')u.sick=400; } break;
+    case 'curse': for(const u of unitsNear(fx,fy,3)){ u.cursed=400; u.blessed=0; } effects.push({x:fx,y:fy,r:3,t:0,dur:0.8,c:'rgba(150,60,200,.8)'}); break;
+    case 'tornado': effects.push({x:fx,y:fy,tornado:true,t:0,dur:12,vx:(rng()-0.5)*1.5,vy:(rng()-0.5)*1.5}); break;
+    case 'war': { const v=villageAt(i); if(!v||v.kingdom<0){ hint('Tap a kingdom'); break; } const K=kingdoms[v.kingdom]; let L=null,bd=1e9; for(const o of villages){ if(o.dead||o.kingdom<0||o.kingdom===K.id)continue; const d=Math.hypot(o.x-x,o.y-y); if(d<bd){bd=d;L=kingdoms[o.kingdom];} } if(L){ K.wars.add(L.id); L.wars.add(K.id); K.warT=L.warT=world.tick; toast(`${K.name} declares war on ${L.name}`,'war'); } break; }
+    case 'peace': { const v=villageAt(i); if(!v||v.kingdom<0){ hint('Tap a kingdom'); break; } const K=kingdoms[v.kingdom]; for(const id of K.wars){ const L=kingdoms[id]; L.wars.delete(K.id); K.rel.set(id,0.2); L.rel.set(K.id,0.2); } if(K.wars.size)toast(`${K.name} makes peace`,'good'); K.wars.clear(); break; } } }
+function explode(fx,fy,r,dmg){ const x=Math.floor(fx),y=Math.floor(fy); shake=0.6; for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){ const d=Math.hypot(dx,dy); if(d>r)continue; const xx=x+dx,yy=y+dy; if(!inb(xx,yy))continue; const j=idx(xx,yy); if(d<r*0.5){ if(world.obj[j]===O.HALL){ const v=villages[world.objT[j]]; if(v&&!v.dead)killVillage(v,'destroyed'); } if(world.obj[j]===O.HOUSE){ const v=villages[world.objT[j]]; if(v&&!v.dead)v.houses=Math.max(0,v.houses-1); } world.obj[j]=O.NONE; if(world.terrain[j]===T.GRASS||world.terrain[j]===T.MOUNT)world.terrain[j]=T.ASH; world.burn[j]=200; } else if(rng()<0.5)ignite(j); markDirty(xx,yy); } for(const u of unitsNear(fx,fy,r+0.5))hurt(u,dmg*(1-Math.hypot(u.x-fx,u.y-fy)/(r+1))); for(let k=0;k<40;k++){ const a=rng()*6.28, s=1+rng()*5; particles.push({x:fx,y:fy,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,life:0.5+rng()*0.8,c:rng()<0.5?'#ff8a3c':'#ffd36e',s:3}); } effects.push({x:fx,y:fy,r:r+0.5,t:0,dur:0.5,c:'rgba(255,200,120,.9)'}); }
+function puff(x,y,c,n){ for(let k=0;k<n;k++)particles.push({x,y,vx:(rng()-0.5)*2,vy:-rng()*2,life:0.4+rng()*0.4,c,s:2}); }
+function slash(x,y,dir){ effects.push({x,y,slash:true,dir,t:0,dur:0.2}); }
+let shake=0;
+function tickEffects(dt){ for(const e of effects){ e.t+=dt; if(e.meteor&&!e.hit&&e.t>=e.dur){ e.hit=true; explode(e.x,e.y,3,40); } if(e.rain){ if(world.tick%2===0){ for(let k=0;k<6;k++){ const x=Math.floor(e.x+(rng()-0.5)*e.r*2), y=Math.floor(e.y+(rng()-0.5)*e.r*2); if(inb(x,y)){ const j=idx(x,y); world.fire[j]=0; world.wet[j]=60; if(world.obj[j]===O.FARM)world.objT[j]=Math.min(40,world.objT[j]+1); markDirty(x,y); } } } } if(e.tornado){ e.x+=e.vx*dt; e.y+=e.vy*dt; e.vx+=(rng()-0.5)*0.4*dt; e.vy+=(rng()-0.5)*0.4*dt; for(const u of unitsNear(e.x,e.y,2)){ u.x+=(rng()-0.5)*1.5; u.y+=(rng()-0.5)*1.5; if(rng()<0.1*dt*10)hurt(u,2); u.state='idle'; } const x=Math.floor(e.x),y=Math.floor(e.y); if(inb(x,y)){ const j=idx(x,y); if(world.obj[j]===O.TREE&&rng()<0.3){ world.obj[j]=O.NONE; markDirty(x,y); } if(world.obj[j]===O.HOUSE&&rng()<0.1){ const v=villages[world.objT[j]]; if(v&&!v.dead)v.houses=Math.max(0,v.houses-1); world.obj[j]=O.NONE; markDirty(x,y); } } } }
+  effects=effects.filter(e=>e.t<e.dur); for(const p of particles){ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy+=3*dt; p.life-=dt; } particles=particles.filter(p=>p.life>0); if(particles.length>600)particles.splice(0,particles.length-600); if(shake>0)shake=Math.max(0,shake-dt); }
+// ---------- rendering: pixel art drawn in code, terrain cached in a canvas, everything else per frame ----------
+const canvas=document.getElementById('map'); const ctx=canvas.getContext('2d'); let cssW=0,cssH=0,dpr=1;
+const cam={x:W/2,y:H/2,z:1}; // z = pixels per tile / TS
+let terr=null,tctx=null; const dirty=new Set(); let allDirty=true;
+function markDirty(x,y){ dirty.add(idx(x,y)); for(const [dx,dy] of [[0,-1],[0,1],[1,0],[-1,0]])if(inb(x+dx,y+dy))dirty.add(idx(x+dx,y+dy)); }
+function markAllDirty(){ allDirty=true; }
+const TC={[T.DEEP]:['#1b4b7a','#1f5486'],[T.SEA]:['#2f78b0','#3684be'],[T.SAND]:['#e2cf8e','#d9c480'],[T.GRASS]:['#6fa84f','#67a048'],[T.MOUNT]:['#8a8578','#7c7769'],[T.ASH]:['#4a4440','#544e48'],[T.LAVA]:['#e05a2a','#ff7a30']};
+function drawTile(g,x,y){ const i=idx(x,y); const t=world.terrain[i]; const px=x*TS,py=y*TS; const h=hash(i*3+1); g.fillStyle=TC[t][h<0.5?0:1]; g.fillRect(px,py,TS,TS);
+  if(t===T.GRASS){ g.fillStyle=h<0.3?'#78b457':'#639a44'; g.fillRect(px+(h*7|0),py+(hash(i*5)*7|0),2,2); if(hash(i*9)<0.15){ g.fillStyle='#5c9040'; g.fillRect(px+(hash(i*11)*8|0),py+(hash(i*13)*8|0),1,2); } }
+  else if(t===T.SEA||t===T.DEEP){ // shore foam
+    const land=[[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>inb(x+dx,y+dy)&&world.terrain[idx(x+dx,y+dy)]>T.SEA); if(land){ g.fillStyle='rgba(255,255,255,.35)'; g.fillRect(px,py,TS,TS); } else { g.fillStyle='rgba(255,255,255,.12)'; g.fillRect(px+(h*8|0),py+(hash(i*7)*8|0),3,1); } }
+  else if(t===T.MOUNT){ g.fillStyle='#a39e90'; g.beginPath(); g.moveTo(px+1,py+TS-1); g.lineTo(px+TS/2,py+1); g.lineTo(px+TS-1,py+TS-1); g.closePath(); g.fill(); g.fillStyle='#6a665c'; g.beginPath(); g.moveTo(px+TS/2,py+1); g.lineTo(px+TS-1,py+TS-1); g.lineTo(px+TS/2+1,py+TS-1); g.closePath(); g.fill(); if(h<0.4){ g.fillStyle='#f4f6f8'; g.fillRect(px+TS/2-1,py+1,2,2); } }
+  else if(t===T.SAND){ g.fillStyle='#cbb46e'; g.fillRect(px+(h*8|0),py+(hash(i*7)*8|0),2,1); }
+  else if(t===T.ASH){ g.fillStyle='#2e2a28'; g.fillRect(px+(h*7|0),py+(hash(i*5)*7|0),2,2); }
+  if(world.wet[i]&&t>T.SEA){ g.fillStyle='rgba(60,90,140,.18)'; g.fillRect(px,py,TS,TS); }
+  const o=world.owner[i]; if(o>=0&&!villages[o].dead){ const K=kingdoms[villages[o].kingdom]; if(K){ const c=K.color; g.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},.16)`; g.fillRect(px,py,TS,TS); // border
+      for(const [dx,dy,sx,sy,w,hh] of [[1,0,TS-1,0,1,TS],[-1,0,0,0,1,TS],[0,1,0,TS-1,TS,1],[0,-1,0,0,TS,1]]){ const xx=x+dx,yy=y+dy; const oo=inb(xx,yy)?world.owner[idx(xx,yy)]:-1; const ok=oo>=0&&!villages[oo].dead&&villages[oo].kingdom===villages[o].kingdom; if(!ok){ g.fillStyle=`rgba(${c[0]},${c[1]},${c[2]},.85)`; g.fillRect(px+sx,py+sy,w,hh); } } } }
+  const ob=world.obj[i]; if(ob===O.FARM){ const gr=world.objT[i]; g.fillStyle='#8a6a3c'; g.fillRect(px+1,py+1,TS-2,TS-2); g.fillStyle=gr>=40?'#e2c050':gr>20?'#9fc45a':'#6f9a44'; for(let k=0;k<3;k++)g.fillRect(px+2,py+2+k*3,TS-4,1); if(gr>=40){ g.fillStyle='#f0d060'; for(let k=0;k<3;k++)g.fillRect(px+2+k*3,py+2,1,TS-4); } } }
+function drawObj(g,x,y,px,py,s){ const i=idx(x,y); const o=world.obj[i]; const h=hash(i*17+5); if(!o)return;
+  if(o===O.TREE){ const tall=h<0.4; g.fillStyle='#5a3a22'; g.fillRect(px+4*s,py+6*s,2*s,4*s); g.fillStyle=h<0.5?'#2e7d3a':'#3a8f44'; g.fillRect(px+1*s,py+(tall?0:2)*s,8*s,(tall?7:5)*s); g.fillRect(px+3*s,py+(tall?-2:0)*s,4*s,3*s); g.fillStyle='#4aa352'; g.fillRect(px+2*s,py+(tall?1:3)*s,3*s,2*s); }
+  else if(o===O.SAPLING){ g.fillStyle='#3a8f44'; g.fillRect(px+4*s,py+5*s,2*s,2*s); g.fillRect(px+3*s,py+3*s,4*s,2*s); g.fillStyle='#5a3a22'; g.fillRect(px+4.5*s,py+7*s,1*s,2*s); }
+  else if(o===O.BUSH){ g.fillStyle='#2f7a3c'; g.fillRect(px+2*s,py+4*s,6*s,5*s); g.fillStyle='#c0392b'; g.fillRect(px+3*s,py+5*s,1*s,1*s); g.fillRect(px+6*s,py+6*s,1*s,1*s); }
+  else if(o===O.ROCK){ g.fillStyle='#7a7a7a'; g.fillRect(px+2*s,py+4*s,6*s,5*s); g.fillStyle='#9a9a9a'; g.fillRect(px+3*s,py+3*s,3*s,2*s); }
+  else if(o===O.HOUSE||o===O.HALL){ const v=villages[world.objT[i]]; const R=RACES[v?v.race:'human']; const K=v&&v.kingdom>=0?kingdoms[v.kingdom]:null; const big=o===O.HALL; g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(px+1*s,py+8*s,9*s,2*s); g.fillStyle=R.wall; g.fillRect(px+1*s,py+4*s,8*s,5*s); g.fillStyle=R.roof; if(big){ g.fillRect(px,py+1*s,10*s,3*s); g.fillRect(px+2*s,py-1*s,6*s,2*s); } else { g.fillRect(px,py+2*s,10*s,2*s); g.fillRect(px+2*s,py+0*s,6*s,2*s); } g.fillStyle='#3a2a1a'; g.fillRect(px+4*s,py+6*s,2*s,3*s); g.fillStyle='#f2e6a0'; g.fillRect(px+2*s,py+5*s,1*s,1*s); if(big&&K){ g.fillStyle='#5a3a22'; g.fillRect(px+8*s,py-4*s,1*s,5*s); g.fillStyle=`rgb(${K.color.join(',')})`; g.fillRect(px+9*s,py-4*s,3*s,2*s); } }
+  else if(o===O.SITE){ const st=world.objT[i]; g.fillStyle='#8a6a3c'; g.fillRect(px+1*s,py+7*s,8*s,2*s); g.fillStyle='#b08a50'; if(st>=1)g.fillRect(px+1*s,py+4*s,1*s,4*s); if(st>=1)g.fillRect(px+8*s,py+4*s,1*s,4*s); if(st>=2)g.fillRect(px+1*s,py+4*s,8*s,1*s); } }
+function drawUnit(g,u,px,py,s,now){ const R=RACES[u.race]; const f=u.dir; const walk=u.moving?Math.sin(now/90+u.ph):0; const bob=u.moving?Math.abs(Math.sin(now/90+u.ph))*s:0; const baby=u.kind==='person'&&u.age<8; const sc=baby?0.65:1;
+  g.save(); g.translate(px+5*s,py+9*s-bob); g.scale(f*sc,sc); g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(-3*s,0,6*s,1*s);
+  if(u.kind==='sheep'){ g.fillStyle='#f4f4f0'; g.fillRect(-4*s,-5*s,8*s,4*s); g.fillStyle='#2a2a2a'; g.fillRect(2*s,-6*s,3*s,3*s); g.fillRect(-3*s,-1*s,1*s,1*s+walk*s); g.fillRect(1*s,-1*s,1*s,1*s-walk*s); g.restore(); return; }
+  if(u.kind==='wolf'){ g.fillStyle='#5a5a60'; g.fillRect(-4*s,-5*s,8*s,3*s); g.fillRect(3*s,-6*s,3*s,2*s); g.fillStyle='#3a3a40'; g.fillRect(-4*s,-2*s,1*s,2*s+walk*s); g.fillRect(2*s,-2*s,1*s,2*s-walk*s); g.fillStyle='#e03030'; g.fillRect(5*s,-6*s,1*s,1*s); g.restore(); return; }
+  // legs, body, head, hair, arms
+  g.fillStyle='#3a2a20'; g.fillRect(-2*s,-2*s,1.5*s,2*s+walk*s*0.8); g.fillRect(0.5*s,-2*s,1.5*s,2*s-walk*s*0.8);
+  g.fillStyle=u.soldier?'#8a8f96':R.cloth; g.fillRect(-2.5*s,-6*s,5*s,4*s);
+  g.fillStyle=R.skin; g.fillRect(-2*s,-10*s,4*s,4*s); g.fillStyle=R.hair; g.fillRect(-2*s,-10.5*s,4*s,1.5*s); if(u.race==='elf')g.fillRect(-2.5*s,-9*s,1*s,1*s); if(u.race==='dwarf'){ g.fillStyle=R.hair; g.fillRect(-2*s,-7*s,4*s,1.5*s); } if(u.race==='orc'){ g.fillStyle='#fff'; g.fillRect(1*s,-7*s,1*s,1*s); }
+  if(u.soldier){ g.fillStyle='#7a7f86'; g.fillRect(-2.5*s,-11*s,5*s,1.5*s); g.fillStyle='#d0d4d8'; g.fillRect(3*s,-9*s,1*s,5*s); }
+  if(u.king){ g.fillStyle='#f2c14e'; g.fillRect(-2*s,-11.5*s,4*s,1.5*s); }
+  if(u.carry==='wood'){ g.fillStyle='#8a5a2a'; g.fillRect(-3*s,-12*s,6*s,1.5*s); } else if(u.carry==='food'){ g.fillStyle='#e2c050'; g.fillRect(-1.5*s,-12*s,3*s,2*s); }
+  if(u.job==='chop'&&u.state==='work'){ g.fillStyle='#8a8f96'; const sw=Math.sin(now/120)*2; g.fillRect(3*s,-9*s-sw*s,2*s,1.5*s); g.fillStyle='#6b4b2a'; g.fillRect(2.5*s,-8*s-sw*s,1*s,3*s); }
+  if(u.job==='fish'&&u.state==='work'){ g.strokeStyle='#5a3a22'; g.lineWidth=s*0.6; g.beginPath(); g.moveTo(2*s,-7*s); g.lineTo(7*s,-12*s); g.stroke(); g.strokeStyle='#fff'; g.beginPath(); g.moveTo(7*s,-12*s); g.lineTo(8*s,-2*s); g.stroke(); }
+  if(u.sick){ g.fillStyle='#7ab860'; g.fillRect(-1*s,-9*s,2*s,1*s); } if(u.blessed>0){ g.fillStyle='rgba(255,230,120,.8)'; g.fillRect(-3*s,-13*s,6*s,1*s); } if(u.cursed>0){ g.fillStyle='rgba(150,60,200,.8)'; g.fillRect(-3*s,-13*s,6*s,1*s); }
+  g.restore();
+  if(u.hp<u.maxhp*0.7){ g.fillStyle='#222'; g.fillRect(px+2*s,py-4*s,6*s,1*s); g.fillStyle='#e04040'; g.fillRect(px+2*s,py-4*s,6*s*u.hp/u.maxhp,1*s); } }
+function resize(){ dpr=Math.min(2,window.devicePixelRatio||1); cssW=window.innerWidth; cssH=window.innerHeight; canvas.width=Math.round(cssW*dpr); canvas.height=Math.round(cssH*dpr); const bar=document.getElementById('bottom'); document.documentElement.style.setProperty('--barH',bar.offsetHeight+'px'); }
+window.addEventListener('resize',resize);
+function clampCam(){ const minZ=Math.max(cssW/(W*TS),cssH/(H*TS))*0.9; cam.z=Math.max(minZ,Math.min(8,cam.z)); const hw=cssW/2/(TS*cam.z), hh=cssH/2/(TS*cam.z); cam.x=Math.max(hw-2,Math.min(W-hw+2,cam.x)); cam.y=Math.max(hh-2,Math.min(H-hh+2,cam.y)); }
+function toScreen(x,y){ return [(x-cam.x)*TS*cam.z+cssW/2,(y-cam.y)*TS*cam.z+cssH/2]; }
+function toWorld(sx,sy){ return [(sx-cssW/2)/(TS*cam.z)+cam.x,(sy-cssH/2)/(TS*cam.z)+cam.y]; }
+function draw(now){ if(!terr){ terr=document.createElement('canvas'); terr.width=W*TS; terr.height=H*TS; tctx=terr.getContext('2d'); }
+  if(allDirty){ for(let y=0;y<H;y++)for(let x=0;x<W;x++)drawTile(tctx,x,y); allDirty=false; dirty.clear(); } else if(dirty.size){ for(const i of dirty){ const x=i%W,y=(i-x)/W; drawTile(tctx,x,y); } dirty.clear(); }
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.imageSmoothingEnabled=false; ctx.fillStyle='#0b2238'; ctx.fillRect(0,0,cssW,cssH);
+  const z=cam.z; const sx=shake>0?(rng()-0.5)*shake*20:0, sy=shake>0?(rng()-0.5)*shake*20:0; ctx.translate(sx,sy);
+  const [ox,oy]=toScreen(0,0); ctx.drawImage(terr,0,0,W*TS,H*TS,ox,oy,W*TS*z,H*TS*z);
+  const x0=Math.max(0,Math.floor(cam.x-cssW/2/(TS*z))-1), y0=Math.max(0,Math.floor(cam.y-cssH/2/(TS*z))-2), x1=Math.min(W-1,Math.ceil(cam.x+cssW/2/(TS*z))+1), y1=Math.min(H-1,Math.ceil(cam.y+cssH/2/(TS*z))+1);
+  // objects and units, painter's order by row
+  const rows=new Map(); for(const u of units){ if(u.dead)continue; const r=Math.floor(u.y); if(r<y0||r>y1||u.x<x0||u.x>x1)continue; let a=rows.get(r); if(!a){a=[];rows.set(r,a);} a.push(u); }
+  for(let y=y0;y<=y1;y++){ for(let x=x0;x<=x1;x++){ const o=world.obj[idx(x,y)]; if(o&&o!==O.FARM){ const [px,py]=toScreen(x,y); drawObj(ctx,x,y,px,py,z); } const i=idx(x,y); if(world.fire[i]){ const [px,py]=toScreen(x,y); const fl=(now/90+i)%2|0; ctx.fillStyle=fl?'#ff9a3c':'#ffd36e'; ctx.fillRect(px+2*z,py+2*z-fl*z,6*z,7*z); ctx.fillStyle='#ff5a1c'; ctx.fillRect(px+3*z,py+5*z,4*z,4*z); } }
+    const a=rows.get(y); if(a){ a.sort((p,q)=>p.y-q.y); for(const u of a){ const [px,py]=toScreen(u.x-0.5,u.y-0.9); drawUnit(ctx,u,px,py,z,now); } } }
+  for(const p of particles){ const [px,py]=toScreen(p.x,p.y); ctx.fillStyle=p.c; ctx.globalAlpha=Math.min(1,p.life*2); ctx.fillRect(px,py,p.s*z*0.5,p.s*z*0.5); } ctx.globalAlpha=1;
+  for(const e of effects){ const [px,py]=toScreen(e.x,e.y); const f=e.t/e.dur; if(e.bolt){ ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.beginPath(); let yy=-cssH; let xx=px; ctx.moveTo(xx,0); for(let k=0;k<8;k++){ xx+=(rng()-0.5)*30; ctx.lineTo(xx,py*(k+1)/8); } ctx.stroke(); ctx.strokeStyle='#8cf'; ctx.lineWidth=1; ctx.stroke(); ctx.fillStyle=`rgba(255,255,255,${0.4*(1-f)})`; ctx.fillRect(-20,-20,cssW+40,cssH+40); }
+    else if(e.meteor){ const mx=px+(1-f)*cssW*0.4, my=py-(1-f)*cssH*0.6; ctx.fillStyle='#ff8a3c'; ctx.beginPath(); ctx.arc(mx,my,6*z,0,6.283); ctx.fill(); ctx.fillStyle='#6a4a3a'; ctx.beginPath(); ctx.arc(mx,my,4*z,0,6.283); ctx.fill(); ctx.strokeStyle='rgba(255,150,60,.6)'; ctx.lineWidth=4*z; ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(mx+30*z,my-45*z); ctx.stroke(); }
+    else if(e.rain){ ctx.fillStyle='rgba(120,130,150,.7)'; ctx.beginPath(); ctx.ellipse(px,py-e.r*TS*z*1.2,e.r*TS*z,e.r*TS*z*0.4,0,0,6.283); ctx.fill(); ctx.strokeStyle='rgba(160,200,255,.7)'; ctx.lineWidth=1; ctx.beginPath(); for(let k=0;k<30;k++){ const rx=px+(hash(k*7+1)-0.5)*e.r*TS*z*2, ry=py-e.r*TS*z+((now/4+k*37)%(e.r*TS*z*2)); ctx.moveTo(rx,ry); ctx.lineTo(rx-2,ry+6*z); } ctx.stroke(); }
+    else if(e.tornado){ ctx.strokeStyle='rgba(200,200,210,.75)'; ctx.lineWidth=2; for(let k=0;k<6;k++){ const r=(k+1)*2.2*z; ctx.beginPath(); ctx.ellipse(px+Math.sin(now/120+k)*z*2,py-k*4*z,r,r*0.4,0,0,6.283); ctx.stroke(); } }
+    else if(e.slash){ ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(px+e.dir*6*z,py-8*z,5*z,-1.2,0.6); ctx.stroke(); }
+    else { ctx.strokeStyle=e.c; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(px,py,e.r*TS*z*f,0,6.283); ctx.stroke(); } }
+  // village names and selection
+  if(z>=0.8){ ctx.font=`${Math.max(9,Math.min(14,7+z*2))}px ${getComputedStyle(document.body).fontFamily}`; ctx.textAlign='center'; ctx.textBaseline='top'; for(const v of villages){ if(v.dead||v.x<x0||v.x>x1||v.y<y0||v.y>y1)continue; const [px,py]=toScreen(v.x+0.5,v.y+1.2); const K=kingdoms[v.kingdom]; ctx.lineWidth=3; ctx.strokeStyle='rgba(8,10,14,.8)'; ctx.fillStyle='#fff'; ctx.strokeText(v.name,px,py); ctx.fillText(v.name,px,py); } }
+  if(selected&&selected.u&&!selected.u.dead){ const [px,py]=toScreen(selected.u.x,selected.u.y-0.5); ctx.strokeStyle='#f2c14e'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(px,py,8*z,0,6.283); ctx.stroke(); }
+  if(brushTool&&cursor){ const [px,py]=toScreen(cursor[0]+0.5,cursor[1]+0.5); ctx.strokeStyle='rgba(255,255,255,.6)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(px,py,(brush+0.5)*TS*z,0,6.283); ctx.stroke(); }
+  ctx.setTransform(dpr,0,0,dpr,0,0); }
+// ---------- icons, toolbar, input, sheets, loop ----------
+const $=id=>document.getElementById(id); let selected=null, cursor=null, brushTool=false, tool='inspect', speed=1; const SPEEDS=[0,1,2,4,8];
+function icon(kind){ const c=document.createElement('canvas'); c.width=c.height=14; const g=c.getContext('2d'); const R=(x,y,w,h,col)=>{ g.fillStyle=col; g.fillRect(x,y,w,h); };
+  switch(kind){ case 'eye': R(2,6,10,3,'#fff'); R(6,5,2,5,'#2a6ad8'); break; case 'grass': R(1,4,12,8,'#6fa84f'); R(3,6,2,2,'#78b457'); R(8,8,2,2,'#5c9040'); break; case 'sea': R(1,3,12,9,'#2f78b0'); R(3,6,6,1,'#fff'); break; case 'mount': g.fillStyle='#a39e90'; g.beginPath(); g.moveTo(1,12); g.lineTo(7,2); g.lineTo(13,12); g.fill(); R(6,2,2,2,'#fff'); break; case 'sand': R(1,3,12,9,'#e2cf8e'); R(4,7,2,1,'#cbb46e'); break; case 'tree': R(6,8,2,4,'#5a3a22'); R(3,2,8,7,'#2e7d3a'); break; case 'clear': R(2,6,10,2,'#fff'); break;
+    case 'human': case 'elf': case 'orc': case 'dwarf': { const P=RACES[kind]; R(5,2,4,4,P.skin); R(5,1,4,1.5,P.hair); R(4,6,6,5,P.cloth); if(kind==='dwarf')R(5,5,4,1.5,P.hair); break; } case 'sheep': R(3,5,8,5,'#f4f4f0'); R(9,4,3,3,'#2a2a2a'); break; case 'wolf': R(3,6,8,3,'#5a5a60'); R(10,5,3,2,'#5a5a60'); R(12,5,1,1,'#e03030'); break;
+    case 'bless': R(6,1,2,12,'#f2c14e'); R(1,6,12,2,'#f2c14e'); break; case 'heal': R(6,2,2,10,'#6fd08c'); R(2,6,10,2,'#6fd08c'); break; case 'rain': R(2,3,10,4,'#9aa8b8'); R(4,8,1,3,'#8cf'); R(7,9,1,3,'#8cf'); R(10,8,1,3,'#8cf'); break; case 'grow': R(6,6,2,7,'#3a8f44'); R(3,3,4,4,'#4aa352'); R(7,2,4,4,'#4aa352'); break;
+    case 'bolt': g.fillStyle='#ffe066'; g.beginPath(); g.moveTo(8,1); g.lineTo(4,8); g.lineTo(7,8); g.lineTo(5,13); g.lineTo(10,6); g.lineTo(7,6); g.fill(); break; case 'fire': R(4,6,6,7,'#ff9a3c'); R(6,3,3,4,'#ffd36e'); R(5,9,4,4,'#ff5a1c'); break; case 'meteor': g.fillStyle='#ff8a3c'; g.beginPath(); g.arc(5,9,4,0,6.283); g.fill(); R(8,2,2,2,'#ffd36e'); R(10,1,2,1,'#ffd36e'); break; case 'bomb': g.fillStyle='#2a2a2a'; g.beginPath(); g.arc(6,9,4.5,0,6.283); g.fill(); R(8,2,2,3,'#8a6a3c'); R(10,1,1,1,'#ff9a3c'); break; case 'plague': R(3,3,8,8,'#7ab860'); R(5,5,1,1,'#2a2a2a'); R(8,5,1,1,'#2a2a2a'); break; case 'curse': g.fillStyle='#9a4ad0'; g.beginPath(); g.arc(7,7,5,0,6.283); g.fill(); R(5,5,1,2,'#fff'); R(8,5,1,2,'#fff'); break; case 'tornado': for(let k=0;k<5;k++)R(2+k,3+k*2,10-2*k,1,'#c8ccd2'); break;
+    case 'war': R(2,2,2,10,'#d0d4d8'); R(10,2,2,10,'#d0d4d8'); R(1,8,12,2,'#8a6a3c'); break; case 'peace': R(3,3,8,8,'#fff'); R(5,6,4,2,'#6fd08c'); break; case 'laws': R(3,2,8,10,'#e6dcc4'); R(5,4,4,1,'#5a4a3a'); R(5,6,4,1,'#5a4a3a'); R(5,8,3,1,'#5a4a3a'); break; }
+  return c; }
+const CATS=['Tools','Terrain','Creatures','Nature','Destruction','Kingdoms']; let cat='Creatures';
+function buildBar(){ const tabs=$('tabs'); tabs.innerHTML=''; for(const c of CATS){ const b=document.createElement('button'); b.textContent=c; b.className=c===cat?'on':''; b.onclick=()=>{ cat=c; buildBar(); }; tabs.appendChild(b); }
+  const tl=$('tools'); tl.innerHTML=''; for(const k in POWERS){ const p=POWERS[k]; if(p.cat!==cat)continue; const b=document.createElement('button'); b.className='tool'+(k===tool?' on':''); b.appendChild(icon(p.icon)); const s=document.createElement('span'); s.textContent=p.name; b.appendChild(s); b.onclick=()=>{ if(k==='laws'){ showLaws(); return; } setTool(k); }; tl.appendChild(b); }
+  const op=$('opts'); op.innerHTML=''; if(POWERS[tool]&&POWERS[tool].brush){ op.innerHTML='<span>Brush</span>'; for(const n of [0,1,2,4]){ const b=document.createElement('button'); b.textContent=['·','S','M','L'][[0,1,2,4].indexOf(n)]; b.className=n===brush?'on':''; b.onclick=()=>{ brush=n; buildBar(); }; op.appendChild(b); } } else if(POWERS[tool]&&POWERS[tool].cat==='Creatures'){ op.innerHTML='<span>Tap the map to drop one; hold to drop many.</span>'; } else op.innerHTML=`<span>${tool==='inspect'?'Tap a creature, house or kingdom.':POWERS[tool]?'Tap the map to use '+POWERS[tool].name.toLowerCase()+'.':''}</span>`;
+  resize(); }
+function setTool(k){ tool=k; brushTool=!!(POWERS[k]&&POWERS[k].brush); buildBar(); }
+function hint(m,ms){ const h=$('hint'); h.textContent=m; h.hidden=false; clearTimeout(hint.t); hint.t=setTimeout(()=>h.hidden=true,ms||2200); }
+function toast(m,k){ const box=$('toasts'); if(box.children.length>=3)box.removeChild(box.firstChild); const el=document.createElement('div'); el.className='toast '+(k||''); el.textContent=m; box.appendChild(el); setTimeout(()=>el.remove(),5000); }
+function openSheet(t,html,col){ $('shTitle').textContent=t; $('shBody').innerHTML=html; const sw=$('shSw'); if(col){ sw.style.background=col; sw.hidden=false; } else sw.hidden=true; $('sheet').hidden=false; }
+function closeSheet(){ $('sheet').hidden=true; selected=null; }
+$('shClose').onclick=closeSheet;
+function kname(id){ const K=kingdoms[id]; return K?K.name:'none'; }
+function showUnit(u){ selected={u}; const v=u.village>=0?villages[u.village]:null; const K=v&&v.kingdom>=0?kingdoms[v.kingdom]:null; const traits=[u.king?'King':null,u.soldier?'Soldier':null,u.sick?'Sick':null,u.blessed>0?'Blessed':null,u.cursed>0?'Cursed':null].filter(Boolean).join(', ');
+  openSheet(u.kind==='person'?u.name:u.kind[0].toUpperCase()+u.kind.slice(1),`<dl class="kv"><dt>Kind</dt><dd>${u.kind==='person'?RACES[u.race].name.slice(0,-1):u.kind}${traits?' · '+traits:''}</dd><dt>Age</dt><dd>${Math.floor(u.age)}</dd><dt>Health</dt><dd>${Math.ceil(u.hp)} / ${u.maxhp}</dd><dt>Hunger</dt><dd>${u.hunger<2?'full':u.hunger<5?'peckish':u.hunger<8?'hungry':'starving'}</dd><dt>Doing</dt><dd>${u.state==='fight'?'fighting':u.state==='march'?'marching to war':u.job==='idle'?'wandering':u.job}${u.carry?' (carrying '+u.carry+')':''}</dd>${v?`<dt>Home</dt><dd>${v.name}</dd>`:''}${K?`<dt>Kingdom</dt><dd>${K.name}</dd>`:''}${u.kills?`<dt>Kills</dt><dd>${u.kills}</dd>`:''}</dl>`,K?`rgb(${K.color.join(',')})`:null); }
+function showVillage(v){ selected={v}; const K=v.kingdom>=0?kingdoms[v.kingdom]:null; openSheet(v.name,`<dl class="kv"><dt>People</dt><dd>${villagePop(v)} ${RACES[v.race].name.toLowerCase()}</dd><dt>Houses</dt><dd>${v.houses}${v.sites.length?' (building)':''}</dd><dt>Stores</dt><dd>${Math.floor(v.food)} food · ${Math.floor(v.wood)} wood</dd><dt>Kingdom</dt><dd>${K?K.name:'none'}</dd><dt>Founded</dt><dd>Year ${Math.floor(v.founded/60)}</dd></dl>${K?`<button class="btn" data-king="${K.id}">About ${K.name}</button>`:''}`,K?`rgb(${K.color.join(',')})`:null); }
+function showKingdom(K){ selected={K}; const vs=villages.filter(v=>!v.dead&&v.kingdom===K.id); const pop=units.filter(u=>!u.dead&&u.village>=0&&villages[u.village].kingdom===K.id).length; const king=units.find(u=>u.id===K.king&&!u.dead); const wars=[...K.wars].map(kname).join(', '); openSheet(K.name,`<dl class="kv"><dt>People</dt><dd>${pop} ${RACES[K.race].name.toLowerCase()}</dd><dt>Villages</dt><dd>${vs.map(v=>v.name).join(', ')}</dd><dt>Ruler</dt><dd>${king?king.name+' (age '+Math.floor(king.age)+')':'none'}</dd><dt>Founded</dt><dd>Year ${Math.floor(K.founded/60)}</dd><dt>At war with</dt><dd>${wars||'no one'}</dd></dl>`,`rgb(${K.color.join(',')})`); }
+function showLaws(){ selected=null; const L=world.laws; openSheet('World laws',`<div class="laws">${[['growth','Villages grow and have children'],['wars','Kingdoms go to war'],['disasters','Random lightning strikes'],['animals','Animals breed']].map(([k,t])=>`<label>${t}<input type="checkbox" data-law="${k}" ${L[k]?'checked':''}></label>`).join('')}</div><button class="btn danger" id="resetW">New world</button>`); }
+$('shBody').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b&&b.dataset.king){ showKingdom(kingdoms[+b.dataset.king]); } if(b&&b.id==='resetW'){ if(confirm('Start a new world? This one will be lost.')){ newWorld(Math.floor(Math.random()*1e6)); closeSheet(); clampCam(); } } });
+$('shBody').addEventListener('change',e=>{ const c=e.target; if(c.dataset.law){ world.laws[c.dataset.law]=c.checked; } });
+// input
+const pts=new Map(); let drag=null, pinch=null, moved=false, painting=false, holdT=null;
+canvas.addEventListener('pointerdown',e=>{ canvas.setPointerCapture(e.pointerId); pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(pts.size===1){ drag={x:e.clientX,y:e.clientY,cx:cam.x,cy:cam.y}; moved=false; if(brushTool){ painting=true; applyAt(e.clientX,e.clientY); } else if(POWERS[tool]&&POWERS[tool].cat==='Creatures'){ holdT=setInterval(()=>{ if(!moved)applyAt(e.clientX,e.clientY); },180); } } else if(pts.size===2){ const [a,b]=[...pts.values()]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y),z:cam.z}; painting=false; moved=true; } });
+canvas.addEventListener('pointermove',e=>{ if(!pts.has(e.pointerId)){ const [wx,wy]=toWorld(e.clientX,e.clientY); cursor=[Math.floor(wx),Math.floor(wy)]; return; } pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); if(pinch&&pts.size===2){ const [a,b]=[...pts.values()]; cam.z=pinch.z*Math.hypot(a.x-b.x,a.y-b.y)/pinch.d; clampCam(); return; } if(!drag)return; const dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(painting){ applyAt(e.clientX,e.clientY); return; } if(Math.hypot(dx,dy)>6)moved=true; if(moved){ cam.x=drag.cx-dx/(TS*cam.z); cam.y=drag.cy-dy/(TS*cam.z); clampCam(); } });
+const endPointer=e=>{ pts.delete(e.pointerId); clearInterval(holdT); holdT=null; if(pts.size<2)pinch=null; if(pts.size===0){ if(!moved&&!painting)tapAt(e.clientX,e.clientY); drag=null; painting=false; } };
+canvas.addEventListener('pointerup',endPointer); canvas.addEventListener('pointercancel',endPointer);
+canvas.addEventListener('wheel',e=>{ e.preventDefault(); const [wx,wy]=toWorld(e.clientX,e.clientY); cam.z*=Math.exp(-e.deltaY*0.0015); clampCam(); const [nx,ny]=toWorld(e.clientX,e.clientY); cam.x+=wx-nx; cam.y+=wy-ny; clampCam(); },{passive:false});
+function applyAt(sx,sy){ const [wx,wy]=toWorld(sx,sy); doPower(tool,wx,wy); }
+function tapAt(sx,sy){ const [wx,wy]=toWorld(sx,sy); if(tool==='inspect'){ let best=null,bd=1.2; for(const u of units){ if(u.dead)continue; const d=Math.hypot(u.x-wx,u.y-wy+0.4); if(d<bd){ bd=d; best=u; } } if(best){ showUnit(best); return; } const x=Math.floor(wx),y=Math.floor(wy); if(inb(x,y)){ const i=idx(x,y); const o=world.obj[i]; if(o===O.HOUSE||o===O.HALL){ showVillage(villages[world.objT[i]]); return; } const v=villageAt(i); if(v&&v.kingdom>=0){ showKingdom(kingdoms[v.kingdom]); return; } } closeSheet(); return; } if(POWERS[tool]&&POWERS[tool].cat==='Creatures'&&holdT!==null)return; applyAt(sx,sy); }
+for(let k=0;k<5;k++)$('sp'+k).onclick=()=>{ speed=k; for(let j=0;j<5;j++)$('sp'+j).classList.toggle('on',j===k); };
+// ---------- loop & persistence ----------
+let lastT=0, acc=0, hudT=0, saveT=0; const SAVE='little-worlds-v1';
+function frame(now){ const dt=Math.min(0.1,(now-lastT)/1000)||0.016; lastT=now; const sps=SPEEDS[speed]*20; acc+=dt*sps; let n=0; while(acc>=1&&n<60){ world.tick; tickWorld(); acc-=1; n++; }
+  const sdt=dt*SPEEDS[speed]; if(sdt>0){ for(const u of units){ if(!u.dead)tickUnit(u,sdt); } units=units.filter(u=>!u.dead); tickEffects(sdt); }
+  draw(now); if(now-hudT>500){ hudT=now; $('stPop').textContent=units.filter(u=>u.kind==='person').length; $('stVil').textContent=villages.filter(v=>!v.dead).length; $('stKing').textContent=kingdoms.filter(k=>!k.dead).length; $('stYear').textContent='Year '+Math.floor(world.tick/60); $('stWorld').textContent=world.name; }
+  if(now-saveT>15000){ saveT=now; save(); } requestAnimationFrame(frame); }
+function save(){ try{ localStorage.setItem(SAVE,JSON.stringify({seed:world.seed,tick:world.tick,name:world.name,laws:world.laws,terrain:Array.from(world.terrain),obj:Array.from(world.obj),objT:Array.from(world.objT),owner:Array.from(world.owner),units:units.map(u=>Object.assign({},u,{prey:undefined})),villages,kingdoms:kingdoms.map(K=>Object.assign({},K,{wars:[...K.wars],rel:[...K.rel]})),nextId,cam})); }catch(e){} }
+function load(){ try{ const d=JSON.parse(localStorage.getItem(SAVE)||'null'); if(!d||!d.terrain||d.terrain.length!==W*H)return false; newWorld(d.seed,true); world.tick=d.tick; world.name=d.name; Object.assign(world.laws,d.laws||{}); world.terrain=Uint8Array.from(d.terrain); world.obj=Uint8Array.from(d.obj); world.objT=Uint16Array.from(d.objT); world.owner=Int16Array.from(d.owner); units=d.units; villages=d.villages; kingdoms=d.kingdoms.map(K=>Object.assign(K,{wars:new Set(K.wars),rel:new Map(K.rel)})); nextId=d.nextId; Object.assign(cam,d.cam); markAllDirty(); return true; }catch(e){ return false; } }
+function start(){ resize(); const loaded=load(); if(!loaded){ newWorld(Math.floor(Math.random()*1e6)); } buildBar(); clampCam(); if(loaded)$('help').hidden=true; requestAnimationFrame(frame); }
+$('helpClose').onclick=()=>{ $('help').hidden=true; setTool('human'); cat='Creatures'; buildBar(); hint('Drop a few humans on the grass and watch them settle',3500); };
+$('newWorld').onclick=()=>{ newWorld(Math.floor(Math.random()*1e6)); clampCam(); $('help').hidden=true; setTool('human'); cat='Creatures'; buildBar(); };
+window.__lw={tickEffects,prune:()=>{ units=units.filter(u=>!u.dead); },get world(){return world;},get units(){return units;},get villages(){return villages;},get kingdoms(){return kingdoms;},doPower,cam,draw,tickWorld,tickUnit,spawnUnit,newWorld,setTool};
+start();
+</script></body></html>

@@ -1,5 +1,9 @@
 # Cradle of Nations
 
+## Little Worlds (`sandbox.html`)
+
+A second game in the WorldBox mould, built from scratch: a small painted pixel world you can terraform with brushes (land, sea, mountain, sand, forest), creatures you drop by hand (humans, elves, orcs, dwarves, sheep, wolves) that hunt, forage, fish, cut trees, carry wood and build houses tile by tile, found villages with named kingdoms, borders and flags, crown kings, raise soldiers and go to war, and a toolbar of physical powers (lightning, spreading fire, meteors with craters, bombs, plague, curse, tornado, rain, blessing, healing, fertility) plus world laws. Everything is visible at once and every power acts on tiles and creatures directly. It is a single file with no dependencies.
+
 A single-file world-history simulation: drop settlers on a real map and watch villages, nations, trade and wars unfold from the Stone Age to the Information Age. Everything is in `index.html` (open it in any browser; it is also published as a claude.ai artifact).
 
 ## Art pipeline
